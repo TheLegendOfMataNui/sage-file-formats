@@ -1,0 +1,147 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: SLB_soundtable.bt
+//   Authors: JrMasterModelBuilder
+// Copyright: Copyright (c) 2018 JrMasterModelBuilder
+//   License: MPL-2.0
+//   Version: 1.0
+//   Purpose: Parse SAGE SLB file: soundtable.slb
+//  Category: SAGE
+// File Mask: *.slb
+//  ID Bytes:
+//   History:
+//------------------------------------------------
+
+typedef ulong OFFSET <format=hex, bgcolor=cPurple>;
+
+local long FOOTER_MAGIC = 0xC0FFEE;
+
+typedef struct {
+	long entry_count <
+		bgcolor=cDkBlue,
+		comment="Number of entries before the footer"
+	>;
+	long magic <format=hex, bgcolor=cWhite, comment="Magic: 0xC0FFEE">;
+
+	if (entry_count) {
+		local OFFSET tell = FTell();
+		FSeek(FTell() - (8 + entry_count * 4));
+		OFFSET entries[entry_count] <comment="Offsets to make pointers">;
+		FSeek(tell);
+	}
+} FOOTER <
+	optimize=false,
+	comment="List of offsets to be made absolute pointers by the game engine"
+>;
+
+void read_footer() {
+	// Calculate the offset of footer magic (4-byte aligned).
+	local OFFSET footer_offset = FileSize();
+	footer_offset -= 4;
+	footer_offset >>= 2;
+	footer_offset *= 4;
+
+	// Check if footer present.
+	if (ReadInt(footer_offset) != FOOTER_MAGIC) {
+		return;
+	}
+	footer_offset -= 4;
+
+	// Remember position, go to footer, read the footer, restore position.
+	local OFFSET tell = FTell();
+	FSeek(footer_offset);
+	FOOTER footer;
+	FSeek(tell);
+}
+
+
+
+
+typedef enum <uchar> {
+	// Related DSBCAPS: NONE
+	SOUND_VARIETY_NONE = 0,
+
+	// Related DSBCAPS:
+	//   DSBCAPS_LOCDEFER
+	//   DSBCAPS_CTRLVOLUME
+	//   DSBCAPS_CTRLFREQUENCY
+	SOUND_VARIETY_REGULAR = 1,
+
+	// Related DSBCAPS:
+	//   DSBCAPS_LOCDEFER
+	//   DSBCAPS_CTRLVOLUME
+	//   DSBCAPS_CTRLPAN
+	//   DSBCAPS_CTRLFREQUENCY
+	SOUND_VARIETY_PAN = 2,
+
+	// Related DSBCAPS:
+	//   DSBCAPS_LOCDEFER
+	//   DSBCAPS_MUTE3DATMAXDISTANCE
+	//   DSBCAPS_CTRLVOLUME
+	//   DSBCAPS_CTRLFREQUENCY
+	//   DSBCAPS_CTRL3D
+	SOUND_VARIETY_3D = 3
+} SOUND_VARIETY <bgcolor=cLtBlue, comment="Sound variant, 0-3">;
+
+uchar SOUND_VARIETY_ENUMED(SOUND_VARIETY value) {
+	return sizeof(EnumToString(value)) > 1 ? 1 : 0;
+}
+
+typedef struct {
+	uchar length <bgcolor=cLtBlue, comment="String length, 0-255">;
+	if (length) {
+		char characters[length] <bgcolor=cLtGreen, comment="String data">;
+	}
+	char nul <bgcolor=cLtYellow, comment="Null terminator">;
+} PSTRINGN <optimize=false, comment="Pascal string, null terminated">;
+
+typedef struct {
+	OFFSET offset;
+	local OFFSET tell = FTell();
+	FSeek(offset);
+
+	PSTRINGN pstringn;
+
+	FSeek(tell);
+} PSTRINGN_PTR <optimize=false, comment="Pointer to a pstringn">;
+
+typedef struct {
+	PSTRINGN_PTR pstringn_ptr;
+	SOUND_VARIETY variety;
+	char _pad_1[3] <bgcolor=cBlack, hidden=true>;
+	float volume <bgcolor=cAqua, comment="Audio volume">;
+
+	local string template;
+
+	// Check if the variety is known.
+	if (!SOUND_VARIETY_ENUMED(variety)) {
+		template = "SOUND: Unexpected variety: 0x%02X%s";
+		Printf(template, variety, "\n");
+		Warning(template, variety, "");
+	}
+
+	// Unused alignment padding data.
+	if (_pad_1[0] || _pad_1[1] || _pad_1[2]) {
+		template = "SOUND: Unexpected _pad_1: 0x%02X 0x%02X 0x%02X%s";
+		Printf(template, _pad_1[0], _pad_1[1], _pad_1[2], "\n");
+		Warning(template, _pad_1[0], _pad_1[1], _pad_1[2], "");
+	}
+} SOUND <optimize=false, comment="Sound">;
+
+typedef struct {
+	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
+	OFFSET body_offset <comment="Offset of sound table">;
+
+	FSeek(body_offset);
+
+	SOUND entries[entry_count] <comment="Sounds">;
+} SOUND_TABLE <comment="Sound table", open=true>;
+
+
+
+
+LittleEndian();
+
+read_footer();
+SOUND_TABLE sound_table;
