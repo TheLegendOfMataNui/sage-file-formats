@@ -1,4 +1,4 @@
-# sage-file-formats
+# SAGE File Formats
 
 Documenting the custom file formats used by SAGE (Saffire Advanced Game Engine)
 
