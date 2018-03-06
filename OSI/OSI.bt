@@ -1,0 +1,673 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: OSI.bt
+//   Authors: JrMasterModelBuilder
+// Copyright: Copyright (c) 2018 JrMasterModelBuilder
+//   License: MPL-2.0
+//   Version: 1.0
+//   Purpose: Parse SAGE OSI files.
+//  Category: SAGE
+// File Mask: *.osi
+//  ID Bytes: 4F 53 49 00
+//   History:
+//------------------------------------------------
+
+local uchar show_disassembly = 0;
+// Disabled because very slow, may miss some code behind branchs and jumps.
+// show_disassembly = 1;
+
+
+typedef ulong OFFSET <format=hex, bgcolor=cPurple>;
+
+enum <uchar> BCL {
+	BCL_Nop                         = 0x00,
+	BCL_DebugOn                     = 0x02,
+	BCL_DebugOff                    = 0x03,
+	BCL_LineNumber                  = 0x04,
+	BCL_LineNumberAlt1              = 0x05,
+	BCL_LineNumberAlt2              = 0x06,
+	BCL_SetMemberValue              = 0x10,
+	BCL_GetMemberValue              = 0x11,
+	BCL_GetMemberFunction           = 0x12,
+	BCL_CreateObject                = 0x13,
+	BCL_MemberFunctionArgumentCheck = 0x14,
+	BCL_SetThisMemberValue          = 0x15,
+	BCL_GetThisMemberValue          = 0x16,
+	BCL_GetThisMemberFunction       = 0x17,
+	BCL_GetMemberValueFromString    = 0x18,
+	BCL_GetMemberFunctionFromString = 0x19,
+	BCL_SetMemberValueFromString    = 0x1A,
+	BCL_GetVariableValue            = 0x21,
+	BCL_SetVariableValue            = 0x22,
+	BCL_CreateStackVariables        = 0x23,
+	BCL_IncrementVariable           = 0x24,
+	BCL_DecrementVariable           = 0x25,
+	BCL_Pop                         = 0x30,
+	BCL_PopN                        = 0x31,
+	BCL_Swap                        = 0x32,
+	BCL_Pull                        = 0x33,
+	BCL_DupN                        = 0x34,
+	BCL_Dup                         = 0x35,
+	BCL_PushConstanti32             = 0x40,
+	BCL_PushConstanti24             = 0x41,
+	BCL_PushConstanti16             = 0x42,
+	BCL_PushConstanti8              = 0x43,
+	BCL_PushConstantf32             = 0x44,
+	BCL_PushConstant0               = 0x45,
+	BCL_PushConstantString          = 0x46,
+	BCL_PushNothing                 = 0x47,
+	BCL_PushConstantColor8888       = 0x48,
+	BCL_PushConstantColor5551       = 0x49,
+	BCL_JumpRelative                = 0x50,
+	BCL_JumpAbsolute                = 0x51,
+	BCL_Return                      = 0x52,
+	BCL_CompareAndBranchIfFalse     = 0x53,
+	BCL_BranchAlways                = 0x54,
+	BCL_EqualTo                     = 0x60,
+	BCL_LessThan                    = 0x61,
+	BCL_GreaterThan                 = 0x62,
+	BCL_LessOrEqual                 = 0x63,
+	BCL_GreaterOrEqual              = 0x64,
+	BCL_And                         = 0x6A,
+	BCL_Or                          = 0x6B,
+	BCL_Not                         = 0x6C,
+	BCL_BitwiseAnd                  = 0x6D,
+	BCL_BitwiseOr                   = 0x6E,
+	BCL_BitwiseXor                  = 0x6F,
+	BCL_Add                         = 0x70,
+	BCL_Subtract                    = 0x71,
+	BCL_Multiply                    = 0x72,
+	BCL_Divide                      = 0x73,
+	BCL_Power                       = 0x74,
+	BCL_Modulus                     = 0x75,
+	BCL_BitwiseNot                  = 0x76,
+	BCL_ShiftLeft                   = 0x77,
+	BCL_ShiftRight                  = 0x78,
+	BCL_Increment                   = 0x7A,
+	BCL_Decrement                   = 0x7B,
+	BCL_GetGameVariable             = 0x80,
+	BCL_SetGameVariable             = 0x81,
+	BCL_CallGameFunction            = 0x82,
+	BCL_CallGameFunctionFromString  = 0x83,
+	BCL_CallGameFunctionDirect      = 0x84,
+	BCL_CreateArray                 = 0x90,
+	BCL_GetArrayValue               = 0x91,
+	BCL_ElementsInArray             = 0x92,
+	BCL_SetArrayValue               = 0x93,
+	BCL_AppendToArray               = 0x94,
+	BCL_RemoveFromArray             = 0x95,
+	BCL_InsertIntoArray             = 0x96,
+	BCL_SetRedValue                 = 0xA0,
+	BCL_SetGreenValue               = 0xA1,
+	BCL_SetBlueValue                = 0xA2,
+	BCL_SetAlphaValue               = 0xA3,
+	BCL_GetRedValue                 = 0xA4,
+	BCL_GetGreenValue               = 0xA5,
+	BCL_GetBlueValue                = 0xA6,
+	BCL_GetAlphaValue               = 0xA7,
+	BCL_ConvertToString             = 0xB0,
+	BCL_ConvertToFloat              = 0xB1,
+	BCL_ConvertToInteger            = 0xB2,
+	BCL_IsInteger                   = 0xB8,
+	BCL_IsFloat                     = 0xB9,
+	BCL_IsString                    = 0xBA,
+	BCL_IsAnObject                  = 0xBB,
+	BCL_IsGameObject                = 0xBC,
+	BCL_IsArray                     = 0xBD,
+	BCL_GetObjectClassID            = 0xBF,
+	BCL_Halt                        = 0xFF
+};
+uchar BCL_ENUMED(BCL value) {
+	return sizeof(EnumToString(value)) > 1 ? 1 : 0;
+}
+
+typedef struct {
+	BCL opcode <bgcolor=cDkPurple>;
+	switch (opcode) {
+		case BCL_LineNumber:
+		case BCL_LineNumberAlt1:
+		case BCL_LineNumberAlt2: {
+			long line_number <bgcolor=cDkBlue>;
+			break;
+		}
+		case BCL_SetMemberValue:
+		case BCL_GetMemberValue:
+		case BCL_GetMemberFunction: {
+			short member_id <bgcolor=cBlue>;
+			break;
+		}
+		case BCL_CreateObject: {
+			short object_id <bgcolor=cBlue>;
+			break;
+		}
+		case BCL_MemberFunctionArgumentCheck: {
+			char argc <bgcolor=cLtBlue>;
+			break;
+		}
+		case BCL_MemberFunctionArgumentCheck: {
+			char argc <bgcolor=cLtBlue>;
+			break;
+		}
+		case BCL_SetThisMemberValue:
+		case BCL_GetThisMemberValue:
+		case BCL_GetThisMemberFunction: {
+			short member_id <bgcolor=cBlue>;
+			break;
+		}
+		case BCL_GetVariableValue:
+		case BCL_SetVariableValue: {
+			short variable_id <bgcolor=cBlue>;
+			break;
+		}
+		case BCL_CreateStackVariables: {
+			char argc <bgcolor=cLtBlue>;
+			break;
+		}
+		case BCL_IncrementVariable:
+		case BCL_DecrementVariable: {
+			short variable_id <bgcolor=cBlue>;
+			break;
+		}
+		case BCL_PopN: {
+			char pop_number <bgcolor=cLtBlue>;
+			break;
+		}
+		case BCL_Pull: {
+			char pull_number <bgcolor=cLtBlue>;
+			break;
+		}
+		case BCL_DupN: {
+			char dup_number <bgcolor=cLtBlue>;
+			break;
+		}
+		case BCL_PushConstanti32: {
+			long i32 <bgcolor=cDkBlue>;
+			break;
+		}
+		case BCL_PushConstanti24: {
+			char i24[3] <bgcolor=cDkBlue>;
+			break;
+		}
+		case BCL_PushConstanti16: {
+			short i16 <bgcolor=cBlue>;
+			break;
+		}
+		case BCL_PushConstanti8: {
+			char i8 <bgcolor=cLtBlue>;
+			break;
+		}
+		case BCL_PushConstantf32: {
+			float f32 <bgcolor=cAqua>;
+			break;
+		}
+		case BCL_PushConstantString: {
+			short string_id <bgcolor=cBlue>;
+			break;
+		}
+		case BCL_PushConstantColor8888: {
+			long color <bgcolor=cDkBlue>;
+			break;
+		}
+		case BCL_PushConstantColor5551: {
+			short color <bgcolor=cBlue>;
+			break;
+		}
+		case BCL_JumpRelative:
+		case BCL_JumpAbsolute: {
+			char data <bgcolor=cLtBlue>;
+			break;
+		}
+		case BCL_CompareAndBranchIfFalse: {
+			short data <bgcolor=cBlue>;
+			break;
+		}
+		case BCL_BranchAlways: {
+			short data <bgcolor=cBlue>;
+			break;
+		}
+		case BCL_GetGameVariable:
+		case BCL_SetGameVariable: {
+			short id_1 <bgcolor=cBlue>;
+			short id_2 <bgcolor=cBlue>;
+			break;
+		}
+		case BCL_CallGameFunction:
+		case BCL_CallGameFunctionFromString: {
+			short id_1 <bgcolor=cBlue>;
+			short id_2 <bgcolor=cBlue>;
+			char argc <bgcolor=cLtBlue>;
+			break;
+		}
+		case BCL_CallGameFunctionDirect: {
+			long address <bgcolor=cDkBlue, format=hex>;
+			char argc <bgcolor=cLtBlue>;
+			break;
+		}
+	}
+} BCL_INSTRUCTION;
+
+void warn_unexpected_opcode(BCL opcode, OFFSET offset, string reason) {
+	local string format = "Unexpected opcode: 0x%02x @ 0x%08X%s%s%s";
+	local string reason_before = sizeof(reason) > 1 ? " (" : "";
+	local string reason_after = sizeof(reason) > 1 ? ")" : "";
+	Printf(format, opcode, offset, reason_before, reason, reason_after);
+	Warning(format, opcode, offset, reason_before, reason, reason_after);
+	Printf("\n");
+}
+
+void disassemble(OFFSET offset) {
+	local ulong tell = FTell();
+	FSeek(offset);
+	struct {
+		local OFFSET current_offset;
+		while (1) {
+			current_offset = FTell();
+			BCL_INSTRUCTION instruction;
+			if (instruction.opcode == BCL_Return) {
+				break;
+			}
+			if (!BCL_ENUMED(instruction.opcode)) {
+				warn_unexpected_opcode(
+					instruction.opcode,
+					current_offset,
+					"Unused"
+				);
+			}
+			if (instruction.opcode == BCL_CallGameFunctionDirect) {
+				warn_unexpected_opcode(
+					instruction.opcode,
+					current_offset,
+					"CallGameFunctionDirect should not be in bytecode"
+				);
+			}
+			if (instruction.opcode == BCL_PushConstanti24) {
+				warn_unexpected_opcode(
+					instruction.opcode,
+					current_offset,
+					"PushConstanti24 handler is unwritten"
+				);
+			}
+		}
+	} disassembly;
+	FSeek(tell);
+}
+
+
+
+
+typedef char MAGIC[4];
+
+typedef struct {
+	ushort major <bgcolor=cBlue, comment="Major version">;
+	ushort minor <bgcolor=cBlue, comment="Minor version">;
+} HEADER_VERSION <comment="Version assumed. Unread, seen: 4.1, 6.0">;
+
+
+typedef struct {
+	MAGIC magic <bgcolor=cWhite, comment="File signature, unread">;
+	HEADER_VERSION version;
+} HEADER <comment="File header">;
+
+
+
+
+typedef struct {
+	uchar length <bgcolor=cLtBlue, comment="String length, 0-255">;
+	if (length) {
+		char characters[length] <bgcolor=cLtGreen, comment="String data">;
+	}
+	char nul <bgcolor=cLtYellow, comment="Null terminator">;
+} PSTRINGN <optimize=false, comment="Pascal string, null terminated">;
+
+
+typedef struct {
+	ushort count <bgcolor=cBlue, comment="Entry count">;
+	PSTRINGN strings[count];
+} PSTRINGN_TABLE <optimize=false, comment="Nulled pascal strings">;
+
+
+
+
+typedef struct {
+	uchar length <bgcolor=cLtBlue, comment="Name length, 0-255">;
+	char name[length] <bgcolor=cLtGreen, comment="Name">;
+	OFFSET offset <comment="Bytecode offset">;
+	ushort argc <bgcolor=cLtBlue, comment="Argument count, 0-10">;
+	if (show_disassembly) {
+		disassemble(offset);
+	}
+} FUNCTION <optimize=false, comment="Function declaration">;
+
+
+typedef struct {
+	ushort count <bgcolor=cBlue, comment="Entry count">;
+	FUNCTION functions[count];
+} FUNCTION_TABLE <optimize=false, comment="Named functions">;
+
+
+
+
+typedef struct {
+	ushort name <bgcolor=cBlue, comment="Symbol index">;
+} CLASS_PROPERTY <optimize=false, comment="Class property">;
+
+typedef struct {
+	ushort name <bgcolor=cBlue, comment="Symbol index">;
+	OFFSET offset <comment="Bytecode offset">;
+	if (show_disassembly) {
+		disassemble(offset);
+	}
+} CLASS_METHOD <optimize=false, comment="Class method">;
+
+
+typedef struct {
+	uchar count <bgcolor=cLtBlue, comment="Entry count">;
+	if (count) {
+		CLASS_PROPERTY properties[count];
+	}
+} CLASSB_PROPERTY_TABLE <optimize=false, comment="Class property table">;
+
+typedef struct {
+	ushort count <bgcolor=cLtBlue, comment="Entry count">;
+	if (count) {
+		CLASS_PROPERTY properties[count];
+	}
+} CLASSS_PROPERTY_TABLE <optimize=false, comment="Class property table">;
+
+
+typedef struct {
+	uchar count <bgcolor=cLtBlue, comment="Entry count">;
+	if (count) {
+		CLASS_METHOD methods[count];
+	}
+} CLASSB_METHOD_TABLE <optimize=false, comment="Class method table">;
+
+typedef struct {
+	ushort count <bgcolor=cLtBlue, comment="Entry count">;
+	if (count) {
+		CLASS_METHOD methods[count];
+	}
+} CLASSS_METHOD_TABLE <optimize=false, comment="Class method table">;
+
+
+typedef struct {
+	CLASSB_PROPERTY_TABLE property_table;
+	CLASSB_METHOD_TABLE method_table;
+} CLASSB <optimize=false, comment="Class object">;
+
+typedef struct {
+	CLASSS_PROPERTY_TABLE property_table;
+	CLASSS_METHOD_TABLE method_table;
+} CLASSS <optimize=false, comment="Class object">;
+
+
+typedef struct {
+	ushort count <bgcolor=cBlue, comment="Entry count">;
+	CLASSB classes[count];
+	PSTRINGN names[count] <comment="Class names">;
+} CLASSB_TABLE <optimize=false, comment="Class table">;
+
+typedef struct {
+	ushort count <bgcolor=cBlue, comment="Entry count">;
+	CLASSS classes[count];
+	PSTRINGN names[count] <comment="Class names">;
+} CLASSS_TABLE <optimize=false, comment="Class table">;
+
+
+
+
+LittleEndian();
+
+HEADER header;
+
+// Check the header magic.
+if (header.magic != "OSI\0") {
+	Warning(
+		"Invalid header magic: %02X %02X %02X %02X",
+		header.magic[0],
+		header.magic[1],
+		header.magic[2],
+		header.magic[3]
+	);
+	return -1;
+}
+
+// Check if recognized version.
+switch (header.version.major) {
+	case 4: {
+		if (header.version.minor != 1) {
+			Warning(
+				"Unknown minor version: %u.%u",
+				header.version.major,
+				header.version.minor
+			);
+			return -1;
+		}
+		break;
+	}
+	case 6: {
+		if (header.version.minor != 0) {
+			Warning(
+				"Unknown minor version: %u.%u",
+				header.version.major,
+				header.version.minor
+			);
+			return -1;
+		}
+		break;
+	}
+	default: {
+		Warning(
+			"Unknown major version: %u",
+			header.version.major
+		);
+		return -1;
+	}
+}
+
+PSTRINGN_TABLE string_table <comment="Constant strings">;
+PSTRINGN_TABLE global_table <comment="Global variables">;
+FUNCTION_TABLE function_table;
+
+if (header.version.major == 4) {
+	CLASSB_TABLE class_table;
+}
+else if (header.version.major == 6) {
+	CLASSS_TABLE class_table;
+}
+
+PSTRINGN_TABLE symbol_table <comment="Symbol names (properties/methods)">;
+
+if (header.version.major == 4) {
+	PSTRINGN_TABLE source_table <comment="Source files">;
+}
+
+
+
+
+string encode_string_char(char c) {
+	local string s;
+	switch (c) {
+		case '\0': return "\\0";
+		case '\t': return "\\t";
+		case '\r': return "\\r";
+		case '\n': return "\\n";
+		case '\\': return "\\\\";
+		case '"': return "\\\"";
+	}
+	if (c >= ' ' && c <= '~') {
+		SPrintf(s, "%c", c);
+		return s;
+	}
+	SPrintf(s, "\\x%02X", c);
+	return s;
+}
+
+string encode_string(char str[]) {
+	local int len = sizeof(str);
+	local int i;
+	local string s = "\"";
+	for (i = 0; i < len; i++) {
+		s += encode_string_char(str[i]);
+	}
+	s += "\"";
+	return s;
+}
+
+string encode_pstringn(PSTRINGN &pstringn) {
+	return pstringn.length ? encode_string(pstringn.characters) : "\"\"";
+}
+
+void dump_pstringn_table(string name, PSTRINGN_TABLE &table) {
+	local int i;
+	Printf("%s [%i]:\n", name, table.count);
+	for (i = 0; i < table.count; i++) {
+		Printf(
+			"  [% 5i]: %s\n",
+			i,
+			encode_pstringn(table.strings[i])
+		);
+	}
+	Printf("\n");
+}
+
+
+
+
+void dump_strings() {
+	dump_pstringn_table("Strings", string_table);
+}
+
+void dump_globals() {
+	dump_pstringn_table("Globals", global_table);
+}
+
+void dump_functions() {
+	local int i;
+	Printf("Functions [%i]:\n", function_table.count);
+	for (i = 0; i < function_table.count; i++) {
+		Printf(
+			"  [% 5i]: %s (%i) -> 0x%08X\n",
+			i,
+			function_table.functions[i].length ?
+				encode_string(function_table.functions[i].name) :
+				"\"\"",
+			function_table.functions[i].argc,
+			function_table.functions[i].offset
+		);
+	}
+	Printf("\n");
+}
+
+void dump_classes() {
+	local int class_i;
+	local int i;
+	local int count;
+	local int name;
+	local OFFSET offset;
+
+	Printf("Classes [%i]:\n", class_table.count);
+	for (class_i = 0; class_i < class_table.count; class_i++) {
+		Printf(
+			"  [% 5i]: %s\n",
+			class_i,
+			class_table.names[class_i].characters
+		);
+
+		count = class_table.classes[class_i].property_table.count;
+		Printf("    Properties [%i]:\n", count);
+		for (i = 0; i < count; i++) {
+			name = class_table.classes[class_i].property_table
+				.properties[i].name;
+			Printf(
+				"      [% 5i]: %s\n",
+				i,
+				encode_pstringn(symbol_table.strings[name])
+			);
+		}
+
+		count = class_table.classes[class_i].method_table.count;
+		Printf("    Methods [%i]:\n", count);
+		for (i = 0; i < count; i++) {
+			name = class_table.classes[class_i].method_table
+				.methods[i].name;
+			offset = class_table.classes[class_i].method_table
+				.methods[i].offset;
+			Printf(
+				"      [% 5i]: %s -> 0x%08X\n",
+				i,
+				encode_pstringn(symbol_table.strings[name]),
+				offset
+			);
+		}
+	}
+	Printf("\n");
+}
+
+void dump_symbols() {
+	dump_pstringn_table("Symbols", symbol_table);
+}
+
+void dump_symbols_nonclass() {
+	local int i;
+	local int class_i;
+	local int property_i;
+	local int method_i;
+	local int count;
+	local short name;
+	local int class_symbols[symbol_table.count] = {0};
+	local int non_class_symbols_total = symbol_table.count;
+
+	for (class_i = 0; class_i < class_table.count; class_i++) {
+		count = class_table.classes[class_i].property_table.count;
+		for (property_i = 0; property_i < count; property_i++) {
+			name = class_table.classes[class_i].property_table
+				.properties[property_i].name;
+			if (!class_symbols[name]) {
+				class_symbols[name] = 1;
+				non_class_symbols_total--;
+			}
+		}
+
+		count = class_table.classes[class_i].method_table.count;
+		for (method_i = 0; method_i < count; method_i++) {
+			name = class_table.classes[class_i].method_table
+				.methods[method_i].name;
+			if (!class_symbols[name]) {
+				class_symbols[name] = 1;
+				non_class_symbols_total--;
+			}
+		}
+	}
+
+	Printf("Symbols, non-class [%i]:\n", non_class_symbols_total);
+	for (i = 0; i < symbol_table.count; i++) {
+		if (class_symbols[i]) {
+			continue;
+		}
+		Printf(
+			"  [% 5i]: %s\n",
+			i,
+			symbol_table.strings[i].length ?
+				encode_string(symbol_table.strings[i].characters) : "\"\""
+		);
+	}
+	Printf("\n");
+}
+
+void dump_sources() {
+	dump_pstringn_table("Sources", source_table);
+}
+
+
+
+
+// Disabled because very slow, dumps information to console.
+// dump_strings();
+// dump_globals();
+// dump_functions();
+// dump_classes();
+// dump_symbols();
+// dump_symbols_nonclass();
+// dump_sources();
