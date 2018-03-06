@@ -6,7 +6,7 @@
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
 //   Version: 1.0
-//   Purpose: Parse SAGE SLB file: textures.slb
+//   Purpose: Parse SAGE SLB file: *textures.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:

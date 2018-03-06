@@ -1,1 +1,1 @@
-# SAGE File Format: SLB: `textures.slb`
+# SAGE File Format: SLB: `*textures.slb`
