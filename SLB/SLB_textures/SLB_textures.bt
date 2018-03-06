@@ -1,0 +1,147 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: SLB_textures.bt
+//   Authors: JrMasterModelBuilder
+// Copyright: Copyright (c) 2018 JrMasterModelBuilder
+//   License: MPL-2.0
+//   Version: 1.0
+//   Purpose: Parse SAGE SLB file: textures.slb
+//  Category: SAGE
+// File Mask: *.slb
+//  ID Bytes:
+//   History:
+//------------------------------------------------
+
+typedef ulong OFFSET <format=hex, bgcolor=cPurple>;
+
+local long FOOTER_MAGIC = 0xC0FFEE;
+
+typedef struct {
+	long entry_count <
+		bgcolor=cDkBlue,
+		comment="Number of entries before the footer"
+	>;
+	long magic <format=hex, bgcolor=cWhite, comment="Magic: 0xC0FFEE">;
+
+	if (entry_count) {
+		local OFFSET tell = FTell();
+		FSeek(FTell() - (8 + entry_count * 4));
+		OFFSET entries[entry_count] <comment="Offsets to make pointers">;
+		FSeek(tell);
+	}
+} FOOTER <
+	optimize=false,
+	comment="List of offsets to be made absolute pointers by the game engine"
+>;
+
+void read_footer() {
+	// Calculate the offset of footer magic (4-byte aligned).
+	local OFFSET footer_offset = FileSize();
+	footer_offset -= 4;
+	footer_offset >>= 2;
+	footer_offset *= 4;
+
+	// Check if footer present.
+	if (ReadInt(footer_offset) != FOOTER_MAGIC) {
+		return;
+	}
+	footer_offset -= 4;
+
+	// Remember position, go to footer, read the footer, restore position.
+	local OFFSET tell = FTell();
+	FSeek(footer_offset);
+	FOOTER footer;
+	FSeek(tell);
+}
+
+
+
+
+typedef struct {
+	uchar length <bgcolor=cLtBlue, comment="String length, 0-255">;
+	if (length) {
+		char characters[length] <bgcolor=cLtGreen, comment="String data">;
+	}
+	char nul <bgcolor=cLtYellow, comment="Null terminator">;
+} PSTRINGN <optimize=false, comment="Pascal string, null terminated">;
+
+typedef struct {
+	OFFSET offset <comment="Offset of the pstringn">;
+	local OFFSET tell = FTell();
+	FSeek(offset);
+
+	PSTRINGN pstringn;
+
+	FSeek(tell);
+} PSTRINGN_PTR <optimize=false, comment="Pointer to a pstringn">;
+
+
+typedef struct {
+	PSTRINGN_PTR pstringn_ptr;
+	float transparency <bgcolor=cAqua, comment="Transparency: 0.0-1.0">;
+	float offset_u <bgcolor=cAqua, comment="UV offset: U">;
+	float offset_v <bgcolor=cAqua, comment="UV offset: V">;
+	long animation_frames <
+		bgcolor=cDkBlue,
+		comment="Number of animation frames, possibly limited to 0-255"
+	>;
+} TEXTURE_1 <optimize=false, comment="Texture format 1">;
+
+typedef struct {
+	long entry_count_unused <bgcolor=cDkBlue, comment="Unused">;
+	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
+	OFFSET body_offset <comment="Offset of textures">;
+
+	if (entry_count) {
+		local OFFSET tell = FTell();
+		FSeek(body_offset);
+
+		TEXTURE_1 entries[entry_count] <comment="Textures">;
+
+		FSeek(tell);
+	}
+} TEXTURE_1_TABLE <
+	optimize=false,
+	comment="Texture format 1 table",
+	open=true
+>;
+
+
+typedef struct {
+	PSTRINGN_PTR pstringn_ptr;
+	float float_1 <bgcolor=cAqua, comment="Unknown, seen: 0.0, 1.0">;
+	float float_2 <bgcolor=cAqua, comment="Unknown, seen: 0.0, 1.0">;
+	float float_3 <bgcolor=cAqua, comment="Unknown, seen: 0.0">;
+	float float_4 <bgcolor=cAqua, comment="Unknown, seen: 7.5, 12.0">;
+	long long_1 <bgcolor=cDkBlue, comment="Unknown, seen: 1, 2">;
+} TEXTURE_2 <optimize=false, comment="Texture format 2">;
+
+typedef struct {
+	long entry_count_unused <bgcolor=cDkBlue, comment="Unused">;
+	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
+	OFFSET body_offset <comment="Offset of textures">;
+
+	if (entry_count) {
+		local OFFSET tell = FTell();
+		FSeek(body_offset);
+
+		TEXTURE_2 entries[entry_count] <comment="Textures">;
+
+		FSeek(tell);
+	}
+} TEXTURE_2_TABLE <
+	optimize=false,
+	comment="Texture format 2 table, Unused",
+	open=true
+>;
+
+
+
+
+
+LittleEndian();
+
+read_footer();
+TEXTURE_1_TABLE texture_1_table;
+TEXTURE_2_TABLE texture_2_table;
