@@ -1,0 +1,103 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: SLB_material.bt
+//   Authors: JrMasterModelBuilder
+// Copyright: Copyright (c) 2018 JrMasterModelBuilder
+//   License: MPL-2.0
+//   Version: 1.0
+//   Purpose: Parse SAGE SLB file: material.slb
+//  Category: SAGE
+// File Mask: *.slb
+//  ID Bytes:
+//   History:
+//------------------------------------------------
+
+typedef ulong OFFSET <format=hex, bgcolor=cPurple>;
+
+local long FOOTER_MAGIC = 0xC0FFEE;
+
+typedef struct {
+	long entry_count <
+		bgcolor=cDkBlue,
+		comment="Number of entries before the footer"
+	>;
+	long magic <format=hex, bgcolor=cWhite, comment="Magic: 0xC0FFEE">;
+
+	if (entry_count) {
+		local OFFSET tell = FTell();
+		FSeek(FTell() - (8 + entry_count * 4));
+		OFFSET entries[entry_count] <comment="Offsets to make pointers">;
+		FSeek(tell);
+	}
+} FOOTER <
+	optimize=false,
+	comment="List of offsets to be made absolute pointers by the game engine"
+>;
+
+void read_footer() {
+	// Calculate the offset of footer magic (4-byte aligned).
+	local OFFSET footer_offset = FileSize();
+	footer_offset -= 4;
+	footer_offset >>= 2;
+	footer_offset *= 4;
+
+	// Check if footer present.
+	if (ReadInt(footer_offset) != FOOTER_MAGIC) {
+		return;
+	}
+	footer_offset -= 4;
+
+	// Remember position, go to footer, read the footer, restore position.
+	local OFFSET tell = FTell();
+	FSeek(footer_offset);
+	FOOTER footer;
+	FSeek(tell);
+}
+
+
+
+
+typedef char ID[4] <bgcolor=cWhite>;
+
+typedef struct {
+	long index <bgcolor=cDkBlue, comment="Material index">;
+
+	// Sound bits to index:
+	//   00000000 00000001: 0
+	//   00000000 00000100: 3
+	//   00000000 00001000: 3
+	//   00000000 00010000: 4
+	//   00000000 00100000: 2
+	//   00000000 01000000: 7
+	//   00000000 10000000: 5
+	//   00000001 00000000: 6
+	//   00000010 00000000: 9
+	//   00000100 00000000: 8
+	//   00001000 00000000: 5
+	// All other values default to: 1
+	long flags <
+		format=binary,
+		bgcolor=cDkBlue,
+		comment="High 16 bits define which sound (low 16 bits unused?)"
+	>;
+} MATERIAL <optimize=false, comment="Material">;
+
+typedef struct {
+	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
+	OFFSET body_offset <comment="Offset of table body">;
+
+	FSeek(body_offset);
+
+	if (entry_count) {
+		MATERIAL entries[entry_count] <comment="Materials">;
+	}
+} METERIAL_TABLE <comment="Material table", open=true>;
+
+
+
+
+LittleEndian();
+
+read_footer();
+METERIAL_TABLE material_table;
