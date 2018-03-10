@@ -1,1 +1,1 @@
-# SAGE File Format: SLB: `lev*/**/*_obj.slb`
+# SAGE File Format: SLB: `levels/**/*_obj.slb`
