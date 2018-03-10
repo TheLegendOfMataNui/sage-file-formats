@@ -68,8 +68,8 @@ typedef struct {
 
 typedef struct {
 	ID id <comment="Object ID, gets mapped to a file name">;
-	POINT3D location;
-	POINT3D orientation;
+	POINT3D location <comment="Object location">;
+	POINT3D orientation <comment="Object orientation">;
 	float unknown <bgcolor=cAqua, comment="Unread, usually: -1">;
 	POINT3D collision_point_1 <comment="Used for collision primitive">;
 	POINT3D collision_point_2 <comment="Used for collision primitive">;
