@@ -5,12 +5,14 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.0
+//   Version: 1.1
 //   Purpose: Parse SAGE SLB file: levels/**/*_obj.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.1: Updated the ID struct, replaced point with vector
+//       1.0: Initial release
 //------------------------------------------------
 
 typedef ulong OFFSET <format=hex, bgcolor=cPurple>;
@@ -58,7 +60,10 @@ void read_footer() {
 
 
 
-typedef char ID[4] <bgcolor=cWhite>;
+typedef union {
+	long i;
+	char c[4];
+} IDENTIFIER <bgcolor=cSilver, comment="Matches: ScIdentifier">;
 
 typedef struct {
 	float x <bgcolor=cAqua>;
@@ -67,9 +72,15 @@ typedef struct {
 } POINT3D <comment="Matches: ScPoint3d">;
 
 typedef struct {
-	ID id <comment="Object ID, gets mapped to a file name">;
+	float x <bgcolor=cAqua>;
+	float y <bgcolor=cAqua>;
+	float z <bgcolor=cAqua>;
+} VECTOR3D <comment="Matches: ScVector">;
+
+typedef struct {
+	IDENTIFIER id <comment="Object ID, gets mapped to a file name">;
 	POINT3D location <comment="Object location">;
-	POINT3D orientation <comment="Object orientation">;
+	VECTOR3D orientation <comment="Object orientation">;
 	float unknown <bgcolor=cAqua, comment="Unread, usually: -1">;
 	POINT3D collision_point_1 <comment="Used for collision primitive">;
 	POINT3D collision_point_2 <comment="Used for collision primitive">;
@@ -94,7 +105,7 @@ typedef struct {
 } POSITION <format=binary, comment="Position">;
 
 typedef struct {
-	ID id <
+	IDENTIFIER id <
 		bgcolor=cDkBlue,
 		comment="Reserved space for ID"
 	>;

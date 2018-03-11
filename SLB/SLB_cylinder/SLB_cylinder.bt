@@ -5,12 +5,14 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.0
+//   Version: 1.1
 //   Purpose: Parse SAGE SLB file: cylinder.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.1: Updated the ID struct
+//       1.0: Initial release
 //------------------------------------------------
 
 typedef ulong OFFSET <format=hex, bgcolor=cPurple>;
@@ -58,7 +60,10 @@ void read_footer() {
 
 
 
-typedef char ID[4] <bgcolor=cWhite>;
+typedef union {
+	long i;
+	char c[4];
+} IDENTIFIER <bgcolor=cSilver, comment="Matches: ScIdentifier">;
 
 typedef struct {
 	float x <bgcolor=cAqua>;
@@ -78,5 +83,5 @@ typedef struct {
 LittleEndian();
 
 read_footer();
-ID id <comment="Unread ID">;
+IDENTIFIER id <comment="Unread ID">;
 COLLISION_CYLINDER collision_cylinder;

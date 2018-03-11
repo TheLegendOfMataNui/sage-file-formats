@@ -5,12 +5,14 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.0
+//   Version: 1.1
 //   Purpose: Parse SAGE OSI files.
 //  Category: SAGE
 // File Mask: *.osi
 //  ID Bytes: 4F 53 49 00
 //   History:
+//       1.1: Updated comment
+//       1.0: Initial release
 //------------------------------------------------
 
 local uchar show_disassembly = 0;

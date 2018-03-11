@@ -5,12 +5,14 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.0
+//   Version: 1.1
 //   Purpose: Parse SAGE SLB file: fluff_*.slb, lev*_*.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.1: Updated the ID struct
+//       1.0: Initial release
 //------------------------------------------------
 
 typedef ulong OFFSET <format=hex, bgcolor=cPurple>;
@@ -58,7 +60,10 @@ void read_footer() {
 
 
 
-typedef char ID[4] <bgcolor=cWhite>;
+typedef union {
+	long i;
+	char c[4];
+} IDENTIFIER <bgcolor=cSilver, comment="Matches: ScIdentifier">;
 
 typedef struct {
 	uchar length <bgcolor=cLtBlue, comment="String length, 0-255">;
@@ -79,7 +84,7 @@ typedef struct {
 } PSTRINGN_PTR <optimize=false, comment="Pointer to a pstringn">;
 
 typedef struct {
-	ID id <comment="Along with number, a unique pair">;
+	IDENTIFIER id <comment="Along with number, a unique pair">;
 	long number <bgcolor=cDkBlue, comment="Along with id, a unique pair">;
 	long count <bgcolor=cDkBlue, comment="Number of strings in the group">;
 	OFFSET offset <comment="Offset of pstringn pointers">;

@@ -5,12 +5,14 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.0
+//   Version: 1.1
 //   Purpose: Parse SAGE SLB file: material.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.1: Updated comment, removed an unused struct
+//       1.0: Initial release
 //------------------------------------------------
 
 typedef ulong OFFSET <format=hex, bgcolor=cPurple>;
@@ -57,8 +59,6 @@ void read_footer() {
 
 
 
-
-typedef char ID[4] <bgcolor=cWhite>;
 
 typedef struct {
 	long index <bgcolor=cDkBlue, comment="Material index">;
