@@ -61,7 +61,7 @@ void read_footer() {
 
 
 typedef union {
-	long i;
+	long i <format=hex>;
 	char c[4];
 } IDENTIFIER <bgcolor=cSilver, comment="Matches: ScIdentifier">;
 
