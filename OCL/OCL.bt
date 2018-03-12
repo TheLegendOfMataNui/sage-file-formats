@@ -1,0 +1,329 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: OCL.bt
+//   Authors: JrMasterModelBuilder, benji
+//   Version: 1.0
+//   Purpose: Parse SAGE OCL files.
+//  Category: SAGE
+// File Mask: *.ocl
+//  ID Bytes: 64 00 00 00
+//   History:
+//       1.0: Initial release
+//------------------------------------------------
+
+typedef ulong OFFSET <format=hex, bgcolor=cPurple>;
+
+typedef enum <uchar> {
+	NODE_TYPE_BRANCH = 0,
+	NODE_TYPE_LEAF = 1
+} NODE_TYPE <comment="Type of node, branch or leaf">;
+
+
+typedef struct {
+	float x <bgcolor=cAqua>;
+	float y <bgcolor=cAqua>;
+	float z <bgcolor=cAqua>;
+} POINT3D <comment="Matches: ScPoint3d">;
+
+typedef struct {
+	float x <bgcolor=cAqua>;
+	float y <bgcolor=cAqua>;
+	float z <bgcolor=cAqua>;
+} VECTOR3D <comment="Matches: ScVector">;
+
+
+typedef struct {
+	POINT3D min;
+	POINT3D max;
+} BOUNDING_BOX <comment="Bounding box, 2 POINT3D's">;
+
+
+typedef struct {
+	ulong magic <bgcolor=cWhite, comment="Unread, but always: 0x64">;
+	BOUNDING_BOX bounding_box <
+		comment="Bounding box for the whole tree (unread, matches root node)"
+	>;
+} HEADER <comment="File header">;
+
+
+typedef struct {
+	VECTOR3D computed_normal <
+		comment="Computed normal from points"
+	>;
+	float computed_unknown <
+		bgcolor=cAqua,
+		comment="Computed unknown value, from: (normal * points[0]) * -1"
+	>;
+	float computed_angle <
+		bgcolor=cAqua,
+		comment="Computed angle of face in degrees from level"
+	>;
+	POINT3D points[3] <comment="Vertex points">;
+	POINT3D position_one <comment="Unknown, always seen: {1.0, 1.0, 1.0}">;
+	long material_index <bgcolor=cDkBlue, comment="Index of face material">;
+	char byte_unknown <
+		bgcolor=cLtBlue,
+		comment="Unknown, always seen: 1"
+	>;
+	char _pad_1[3] <bgcolor=cBlack, hidden=true>;
+}
+POLY_NC <comment="Matches: GcPolyNC">;
+
+typedef struct {
+	OFFSET offset <comment="Offset of Poly NC, if non-0">;
+	if (offset) {
+		local OFFSET tell = FTell();
+		FSeek(offset);
+		POLY_NC entries[parentof(this).polync_count];
+		FSeek(tell);
+	}
+}
+POLY_NCS_PTR <optimize=false, comment="List of Poly NC">;
+
+
+typedef struct {
+	OFFSET offset <comment="Offset of adjacent node">;
+} ADJACENT_NODE <comment="Adjacent node">;
+
+typedef struct {
+	OFFSET offset <comment="Offset of adjacent nodes, if non-0">;
+	if (offset) {
+		local OFFSET tell = FTell();
+		FSeek(offset);
+		ADJACENT_NODE entries[6] <comment="Adjacent nodes">;
+		FSeek(tell);
+	}
+} ADJACENT_NODES_PTR <comment="Nodes adjacent to leaf">;
+
+
+typedef struct {
+	OFFSET offset <comment="Offset of child node, if non-0">;
+	if (offset) {
+		read_surface_oct_node(offset);
+	}
+}
+SURFACE_OCT_NODE_PTR <optimize=false, comment="Child node">;
+
+typedef struct {
+	short index <bgcolor=cBlue, comment="This node index in parent, root: -1">;
+	short polync_count <bgcolor=cBlue, comment="Number of polync entries">;
+	POLY_NCS_PTR polyncs;
+	OFFSET polylist <comment="Reserved pointer space for the engine">;
+	SURFACE_OCT_NODE_PTR children[8] <comment="Child nodes">;
+	ADJACENT_NODES_PTR adjacent_nodes;
+	NODE_TYPE type <bgcolor=cLtBlue>;
+	char _pad_1[3] <bgcolor=cBlack, hidden=true>;
+	BOUNDING_BOX bounding_box;
+
+	local string template;
+	local OFFSET child_offset;
+	local string enum_str;
+	local int child_i;
+
+	// Polylist pointer is reserved space for the engine.
+	if (polylist) {
+		template = "SURFACE_OCT_NODE: Unexpected polylist offset: 0x%08X%s";
+		Printf(template, polylist, "\n");
+		Warning(template, polylist, "");
+	}
+
+	// Unused alignment padding data.
+	if (_pad_1[0] || _pad_1[1] || _pad_1[2]) {
+		template = "SURFACE_OCT_NODE: Unexpected _pad_1 data: " +
+			"0x%02X 0x%02X 0x%02X%s";
+		Printf(template, _pad_1[0], _pad_1[1], _pad_1[2], "\n");
+		Warning(template, _pad_1[0], _pad_1[1], _pad_1[2], "");
+	}
+
+	// Check that the node type is expected value.
+	if (type != NODE_TYPE_BRANCH && type != NODE_TYPE_LEAF) {
+		template =
+			"SURFACE_OCT_NODE: Unexpected node type: 0x%02X%s";
+		Printf(template, type, "\n");
+		Warning(template, type, "");
+	}
+
+	// Check child offsets and adjacent nodes conforms to the type.
+	for (child_i = 0; child_i < 8; child_i++) {
+		child_offset = children[child_i].offset;
+		if (
+			(type == NODE_TYPE_BRANCH && !child_offset) ||
+			(type == NODE_TYPE_LEAF && child_offset)
+		) {
+			template = "SURFACE_OCT_NODE: type %s (0x%02X) " +
+				"unexpected child offset: 0x%02X%s";
+			enum_str = EnumToString(type);
+			Printf(template, enum_str, type, child_offset, "\n");
+			Warning(template, enum_str, type, child_offset, "");
+		}
+	}
+	if (
+		(type == NODE_TYPE_BRANCH && adjacent_nodes.offset) ||
+		(type == NODE_TYPE_LEAF && !adjacent_nodes.offset)
+	) {
+		template = "SURFACE_OCT_NODE: type %s (0x%02X) " +
+			"unexpected adjacent_nodes.offset: 0x%02X%s";
+		enum_str = EnumToString(type);
+		Printf(template, enum_str, type, adjacent_nodes.offset, "\n");
+		Warning(template, enum_str, type, adjacent_nodes.offset, "");
+	}
+} SURFACE_OCT_NODE <comment="Matches: GcSurfaceOctNode">;
+
+void read_surface_oct_node(OFFSET offset) {
+	local OFFSET tell = FTell();
+	FSeek(offset);
+	SURFACE_OCT_NODE node;
+	FSeek(tell);
+}
+
+
+
+
+LittleEndian();
+
+HEADER header;
+
+// Technically not enforced by SAGE, but consistent across all samples.
+if (header.magic != 100) {
+	Warning("Unexpected header magic: 0x%08X", header.magic);
+	return -1;
+}
+
+read_surface_oct_node(FTell());
+
+
+
+
+local string dump_indent = "    ";
+
+void dump_point3d(POINT3D & point, string pre) {
+	Printf("%s{ x: %f, y: %f, z: %f }\n", pre, point.x, point.y, point.z);
+}
+void dump_vector3d(VECTOR3D & vector, string pre) {
+	Printf("%s{ x: %f, y: %f, z: %f }\n", pre, vector.x, vector.y, vector.z);
+}
+
+
+
+
+void dump_bounding_box(BOUNDING_BOX & box, string pre) {
+	dump_point3d(box.min, pre + "min: ");
+	dump_point3d(box.max, pre + "max: ");
+}
+
+void dump_tree(SURFACE_OCT_NODE & node, int level) {
+	local string pre = dump_indent;
+	local int level_i;
+	local int child_i;
+	local int polync_i;
+	local int adjacent_i;
+	for (level_i = 0; level_i < level; level_i++) {
+		pre += dump_indent;
+	}
+	local string pre_next = pre + dump_indent;
+
+	if (level == 0) {
+		Printf("Tree:\n");
+	}
+
+	Printf("%sindex: %i\n", pre, node.index);
+	Printf("%stype: 0x%02X (%s)\n", pre, node.type, EnumToString(node.type));
+	Printf("%spolync_count: %i\n", pre, node.polync_count);
+
+	if (node.polync_count) {
+		Printf(
+			"%spolync.offset: 0x%08X\n",
+			pre,
+			node.polyncs.offset
+		);
+		for (polync_i = 0; polync_i < node.polync_count; polync_i++) {
+			Printf(
+				"%spolync.entries[%i]:\n",
+				pre,
+				polync_i
+			);
+			dump_vector3d(
+				node.polyncs.entries[polync_i].computed_normal,
+				pre_next + "computed_normal: "
+			);
+			Printf(
+				"%scomputed_unknown: %f\n",
+				pre_next,
+				node.polyncs.entries[polync_i].computed_unknown
+			);
+			Printf(
+				"%scomputed_angle: %f\n",
+				pre_next,
+				node.polyncs.entries[polync_i].computed_angle
+			);
+			dump_point3d(
+				node.polyncs.entries[polync_i].points[0],
+				pre_next + "points[0]: "
+			);
+			dump_point3d(
+				node.polyncs.entries[polync_i].points[1],
+				pre_next + "points[1]: "
+			);
+			dump_point3d(
+				node.polyncs.entries[polync_i].points[2],
+				pre_next + "points[2]: "
+			);
+			dump_point3d(
+				node.polyncs.entries[polync_i].position_one,
+				pre_next + "position_one: "
+			);
+			Printf(
+				"%smaterial_index: %i\n",
+				pre_next,
+				node.polyncs.entries[polync_i].material_index
+			);
+			Printf(
+				"%sbyte_unknown: %i\n",
+				pre_next,
+				node.polyncs.entries[polync_i].byte_unknown
+			);
+		}
+	}
+
+	dump_bounding_box(node.bounding_box, pre + "bounding_box.");
+
+	if (node.type == NODE_TYPE_BRANCH) {
+		for (child_i = 0; child_i < 8; child_i++) {
+			Printf(
+				"%schildren[%i].offset: 0x%08X\n",
+				pre,
+				child_i,
+				node.children[child_i].offset
+			);
+			Printf(
+				"%schildren[%i].node:\n",
+				pre,
+				child_i
+			);
+			if (node.children[child_i].offset) {
+				dump_tree(node.children[child_i].node, level + 1);
+			}
+		}
+	}
+	else if (node.type == NODE_TYPE_LEAF) {
+		Printf(
+			"%sadjacent_nodes.offset: 0x%08X\n",
+			pre,
+			node.adjacent_nodes.offset
+		);
+		for (adjacent_i = 0; adjacent_i < 6; adjacent_i++) {
+			Printf(
+				"%sadjacent_nodes.entries[%i].offset: 0x%08X\n",
+				pre,
+				adjacent_i,
+				node.adjacent_nodes.entries[adjacent_i].offset
+			);
+		}
+	}
+}
+
+
+
+
+// dump_tree(node, 0);
