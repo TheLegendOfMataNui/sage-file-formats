@@ -3,12 +3,13 @@
 //
 //      File: OCL.bt
 //   Authors: JrMasterModelBuilder, benji
-//   Version: 1.0
+//   Version: 1.1
 //   Purpose: Parse SAGE OCL files.
 //  Category: SAGE
 // File Mask: *.ocl
 //  ID Bytes: 64 00 00 00
 //   History:
+//       1.1: Corrected comment
 //       1.0: Initial release
 //------------------------------------------------
 
@@ -51,9 +52,14 @@ typedef struct {
 	VECTOR3D computed_normal <
 		comment="Computed normal from points"
 	>;
+	// (
+	//   normal.x * points[0].x +
+	//   normal.y * points[0].y +
+	//   normal.z * points[0].z
+	// ) * -1.0
 	float computed_unknown <
 		bgcolor=cAqua,
-		comment="Computed unknown value, from: (normal * points[0]) * -1"
+		comment="Computed value from normal and points[0]"
 	>;
 	float computed_angle <
 		bgcolor=cAqua,
