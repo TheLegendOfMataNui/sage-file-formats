@@ -1,0 +1,245 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: SLB_movelist.bt
+//   Authors: JrMasterModelBuilder
+// Copyright: Copyright (c) 2018 JrMasterModelBuilder
+//   License: MPL-2.0
+//   Version: 1.0
+//   Purpose: Parse SAGE SLB file: movelist.slb
+//  Category: SAGE
+// File Mask: *.slb
+//  ID Bytes:
+//   History:
+//       1.0: Initial release
+//------------------------------------------------
+
+typedef ulong OFFSET <format=hex, bgcolor=cPurple>;
+
+local long FOOTER_MAGIC = 0xC0FFEE;
+
+typedef struct {
+	long entry_count <
+		bgcolor=cDkBlue,
+		comment="Number of entries before the footer"
+	>;
+	long magic <format=hex, bgcolor=cWhite, comment="Magic: 0xC0FFEE">;
+
+	if (entry_count) {
+		local OFFSET tell = FTell();
+		FSeek(FTell() - (8 + entry_count * 4));
+		OFFSET entries[entry_count] <comment="Offsets to make pointers">;
+		FSeek(tell);
+	}
+} FOOTER <
+	optimize=false,
+	comment="List of offsets to be made absolute pointers by the game engine"
+>;
+
+void read_footer() {
+	// Calculate the offset of footer magic (4-byte aligned).
+	local OFFSET footer_offset = FileSize();
+	footer_offset -= 4;
+	footer_offset >>= 2;
+	footer_offset *= 4;
+
+	// Check if footer present.
+	if (ReadInt(footer_offset) != FOOTER_MAGIC) {
+		return;
+	}
+	footer_offset -= 4;
+
+	// Remember position, go to footer, read the footer, restore position.
+	local OFFSET tell = FTell();
+	FSeek(footer_offset);
+	FOOTER footer;
+	FSeek(tell);
+}
+
+
+
+
+typedef union {
+	long i <format=hex>;
+	char c[4];
+} IDENTIFIER <bgcolor=cSilver, comment="Matches: ScIdentifier">;
+
+
+typedef struct {
+	// Input is also mapped to a "type" (all others: 0):
+	// 0x1     - 0x40000   : 'ninp'
+	// 0x80000 - 0x80000000: 'aiin'
+	long input <
+		format=binary,
+		bgcolor=cDkBlue,
+		comment="Unknown flags"
+	>;
+
+	IDENTIFIER id <comment="Animation ID">;
+
+	float float_1 <
+		bgcolor=cAqua,
+		comment="Unknown, possibly unused. Seen: 0.0"
+	>;
+	float float_2 <
+		bgcolor=cAqua,
+		comment="Unknown, possibly unused. Seen: 0.0"
+	>;
+	float float_3 <
+		bgcolor=cAqua,
+		comment="Unknown, possibly time related. Usually: -1.0, seen: 0.0"
+	>;
+
+	// Known flags:
+	// -------1: ?
+	// ------1-: ?
+	// -----1--: ?
+	char flags <
+		format=binary,
+		bgcolor=cLtBlue,
+		comment="Flags of unknown purpose"
+	>;
+	char _pad_1[3] <bgcolor=cBlack, hidden=true, comment="Padding bytes">;
+} SPLIT_TRIGGER <comment="Used to construct GcMoveListSplitTrigger">;
+
+
+typedef struct {
+	IDENTIFIER id_1 <comment="Maps to file name">;
+	IDENTIFIER id_2 <comment="Unknown ID">;
+
+	// Known flags:
+	// ------1-: Matrix related?
+	short flags_1 <
+		format=binary,
+		bgcolor=cBlue,
+		comment="Unknown flags"
+	>;
+	// An index mapped to id_1 in an array of 56.
+	short index <
+		bgcolor=cBlue,
+		comment="Index: -1-56"
+	>;
+
+	long long_1 <
+		bgcolor=cDkBlue,
+		comment="Unknown, appears unused. Usually: 0, seen: 1, 2"
+	>;
+
+	float float_1 <bgcolor=cAqua, comment="Unknown">;
+	float float_2 <bgcolor=cAqua, comment="Unknown, sometimes vector Y">;
+
+	long flags_2 <
+		format=binary,
+		bgcolor=cDkBlue,
+		comment="Unknown flags, related to SPLIT_TRIGGER.input"
+	>;
+
+	short reserved_counter <
+		bgcolor=cBlue,
+		comment="Reserved counter space for the engine"
+	>;
+	char _pad_1[2] <bgcolor=cBlack, hidden=true, comment="Padding bytes">;
+
+	// entry_count_unused is not in an obsolete version of this format.
+	long entry_count_unused <bgcolor=cDkBlue, comment="Unused">;
+	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
+	OFFSET body_offset <comment="Offset of body data">;
+
+	if (entry_count) {
+		local OFFSET tell = FTell();
+		FSeek(body_offset);
+		SPLIT_TRIGGER entries[entry_count] <comment="Entries">;
+		FSeek(tell);
+	}
+} ANIMATION_1 <optimize=false, comment="Animation">;
+
+typedef struct {
+	IDENTIFIER id_1 <comment="Maps to file name">;
+	IDENTIFIER id_2 <comment="Unknown ID">;
+
+	// Known flags:
+	// ------1-: Matrix related?
+	short flags_1 <
+		format=binary,
+		bgcolor=cBlue,
+		comment="Unknown flags"
+	>;
+	// An index mapped to id_1 in an array of 56.
+	short index <
+		bgcolor=cBlue,
+		comment="Index: -1-56"
+	>;
+
+	long long_1 <
+		bgcolor=cDkBlue,
+		comment="Unknown, appears unused. Usually: 0, seen: 1, 2"
+	>;
+
+	float float_1 <bgcolor=cAqua, comment="Unknown">;
+	float float_2 <bgcolor=cAqua, comment="Unknown, sometimes vector Y">;
+
+	long flags_2 <
+		format=binary,
+		bgcolor=cDkBlue,
+		comment="Unknown flags, related to SPLIT_TRIGGER.input"
+	>;
+
+	short reserved_counter <
+		bgcolor=cBlue,
+		comment="Reserved counter space for the engine"
+	>;
+	char _pad_1[2] <bgcolor=cBlack, hidden=true, comment="Padding bytes">;
+
+	// entry_count_unused is not in an obsolete version of this format.
+	long entry_count_unused <bgcolor=cDkBlue, comment="Unused">;
+	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
+	OFFSET body_offset <comment="Offset of body data">;
+	long extra <
+		bgcolor=cDkBlue,
+		comment="Unknown, appears unused. Usually: 0, seen: 1, 5, 10"
+	>;
+
+	if (entry_count) {
+		local OFFSET tell = FTell();
+		FSeek(body_offset);
+		SPLIT_TRIGGER entries[entry_count] <comment="Entries">;
+		FSeek(tell);
+	}
+} ANIMATION_2 <optimize=false, comment="Animation">;
+
+
+typedef struct {
+	long entry_count_unused <bgcolor=cDkBlue, comment="Unused">;
+	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
+	OFFSET body_offset <comment="Offset of table data">;
+
+	if (entry_count) {
+		local OFFSET tell = FTell();
+		FSeek(body_offset);
+		ANIMATION_1 entries[entry_count] <comment="Entries">;
+		FSeek(tell);
+	}
+} ANIMATIONS_1_TABLE <comment="Animations table">;
+
+typedef struct {
+	long entry_count_unused <bgcolor=cDkBlue, comment="Unused">;
+	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
+	OFFSET body_offset <comment="Offset of table data">;
+
+	if (entry_count) {
+		local OFFSET tell = FTell();
+		FSeek(body_offset);
+		ANIMATION_2 entries[entry_count] <comment="Entries">;
+		FSeek(tell);
+	}
+} ANIMATIONS_2_TABLE <comment="Animations table">;
+
+
+
+
+LittleEndian();
+
+read_footer();
+IDENTIFIER id <comment="Unread ID">;
+ANIMATIONS_1_TABLE animations_1_table;
+ANIMATIONS_2_TABLE animations_2_table;
