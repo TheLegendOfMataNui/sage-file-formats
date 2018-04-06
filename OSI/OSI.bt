@@ -5,18 +5,19 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.1
+//   Version: 1.2
 //   Purpose: Parse SAGE OSI files.
 //  Category: SAGE
 // File Mask: *.osi
 //  ID Bytes: 4F 53 49 00
 //   History:
+//       1.2: Disassembly handles branches, improved lines structs.
 //       1.1: Updated comment
 //       1.0: Initial release
 //------------------------------------------------
 
 local uchar show_disassembly = 0;
-// Disabled because very slow, may miss some code behind branchs and jumps.
+// Disabled because very slow, may miss some code.
 // show_disassembly = 1;
 
 
@@ -130,7 +131,8 @@ typedef struct {
 		case BCL_LineNumber:
 		case BCL_LineNumberAlt1:
 		case BCL_LineNumberAlt2: {
-			long line_number <bgcolor=cDkBlue>;
+			short line_number_1 <bgcolor=cBlue>;
+			short line_number_2 <bgcolor=cBlue>;
 			break;
 		}
 		case BCL_SetMemberValue:
@@ -250,12 +252,17 @@ typedef struct {
 } BCL_INSTRUCTION;
 
 void warn_unexpected_opcode(BCL opcode, OFFSET offset, string reason) {
-	local string format = "Unexpected opcode: 0x%02x @ 0x%08X%s%s%s";
+	local string format = "Unexpected opcode: 0x%02x @ 0x%08X%s%s%s%s";
 	local string reason_before = sizeof(reason) > 1 ? " (" : "";
 	local string reason_after = sizeof(reason) > 1 ? ")" : "";
-	Printf(format, opcode, offset, reason_before, reason, reason_after);
-	Warning(format, opcode, offset, reason_before, reason, reason_after);
-	Printf("\n");
+	Printf(format, opcode, offset, reason_before, reason, reason_after, "\n");
+	Warning(format, opcode, offset, reason_before, reason, reason_after, "");
+}
+
+void warn_jump_back_oor(OFFSET offset, short amount) {
+	local string format = "Jump back out-of-range: %i @ 0x%08X%s";
+	Printf(format, amount, offset, "\n");
+	Warning(format, amount, offset, "");
 }
 
 void disassemble(OFFSET offset) {
@@ -263,12 +270,45 @@ void disassemble(OFFSET offset) {
 	FSeek(offset);
 	struct {
 		local OFFSET current_offset;
+		local OFFSET after_offset;
+		local OFFSET jump_to;
+		local OFFSET jump_max = 0;
 		while (1) {
 			current_offset = FTell();
 			BCL_INSTRUCTION instruction;
-			if (instruction.opcode == BCL_Return) {
-				break;
+			after_offset = FTell();
+
+			// Check the branch target.
+			if (
+				instruction.opcode == BCL_BranchAlways ||
+				instruction.opcode == BCL_CompareAndBranchIfFalse
+			) {
+				jump_to = after_offset + instruction.data;
+
+				// Check if jump back jumps out of range.
+				if (instruction.data < 0) {
+					if (jump_to < offset) {
+						warn_jump_back_oor(
+							current_offset,
+							instruction.data
+						);
+					}
+				}
+				// Remember the furthest jump.
+				else if (jump_to > jump_max) {
+					jump_max = jump_to;
+				}
 			}
+
+			// Stop disassembly on the last return.
+			if (instruction.opcode == BCL_Return) {
+				// If a jump points past here, not the last return.
+				if (after_offset > jump_max) {
+					break;
+				}
+			}
+
+			// Warn about unused opcode.
 			if (!BCL_ENUMED(instruction.opcode)) {
 				warn_unexpected_opcode(
 					instruction.opcode,
@@ -276,6 +316,8 @@ void disassemble(OFFSET offset) {
 					"Unused"
 				);
 			}
+
+			// Warn of opcode that only exists in memory.
 			if (instruction.opcode == BCL_CallGameFunctionDirect) {
 				warn_unexpected_opcode(
 					instruction.opcode,
@@ -283,6 +325,8 @@ void disassemble(OFFSET offset) {
 					"CallGameFunctionDirect should not be in bytecode"
 				);
 			}
+
+			// Warn of unimplemented opcode.
 			if (instruction.opcode == BCL_PushConstanti24) {
 				warn_unexpected_opcode(
 					instruction.opcode,
