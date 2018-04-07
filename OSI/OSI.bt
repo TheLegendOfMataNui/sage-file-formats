@@ -5,12 +5,13 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.2
+//   Version: 1.3
 //   Purpose: Parse SAGE OSI files.
 //  Category: SAGE
 // File Mask: *.osi
 //  ID Bytes: 4F 53 49 00
 //   History:
+//       1.3: Removed some dead code.
 //       1.2: Disassembly handles branches, improved lines structs.
 //       1.1: Updated comment
 //       1.0: Initial release
@@ -143,10 +144,6 @@ typedef struct {
 		}
 		case BCL_CreateObject: {
 			short object_id <bgcolor=cBlue>;
-			break;
-		}
-		case BCL_MemberFunctionArgumentCheck: {
-			char argc <bgcolor=cLtBlue>;
 			break;
 		}
 		case BCL_MemberFunctionArgumentCheck: {
