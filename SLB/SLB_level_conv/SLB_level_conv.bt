@@ -5,12 +5,13 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.1
+//   Version: 1.2
 //   Purpose: Parse SAGE SLB file: *level_conv.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.2: Better name.
 //       1.1: Improved comments and structs.
 //       1.0: Initial release
 //------------------------------------------------
@@ -84,7 +85,7 @@ typedef struct {
 	long long_2 <bgcolor=cDkBlue>;
 	long long_3 <bgcolor=cDkBlue>;
 	long long_4 <bgcolor=cDkBlue>;
-	long index <bgcolor=cDkBlue, comment="Index in strings table string list">;
+	long string_index <bgcolor=cDkBlue, comment="Index in strings table string list">;
 	OFFSET body_offset <comment="Offset of body">;
 
 	local OFFSET tell = FTell();
