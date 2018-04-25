@@ -5,12 +5,13 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.0
+//   Version: 1.1
 //   Purpose: Parse SAGE SLB file: *level_conv.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.1: Improved comments and structs.
 //       1.0: Initial release
 //------------------------------------------------
 
@@ -72,13 +73,18 @@ typedef struct {
 	char nul <bgcolor=cLtYellow, comment="Null terminator">;
 } PSTRINGN <optimize=false, comment="Pascal string, null terminated">;
 
+typedef struct {
+	IDENTIFIER id;
+	long number <bgcolor=cDkBlue>;
+} STRING_TABLE_ID <comment="A pair of values that identifies an entry">;
+
 
 typedef struct {
 	long long_1 <bgcolor=cDkBlue>;
 	long long_2 <bgcolor=cDkBlue>;
 	long long_3 <bgcolor=cDkBlue>;
 	long long_4 <bgcolor=cDkBlue>;
-	long index <bgcolor=cDkBlue>;
+	long index <bgcolor=cDkBlue, comment="Index in strings table string list">;
 	OFFSET body_offset <comment="Offset of body">;
 
 	local OFFSET tell = FTell();
@@ -93,8 +99,7 @@ typedef struct {
 	long long_1 <bgcolor=cDkBlue>;
 	long long_2 <bgcolor=cDkBlue>;
 	long long_3 <bgcolor=cDkBlue>;
-	IDENTIFIER id;
-	long long_4 <bgcolor=cDkBlue>;
+	STRING_TABLE_ID id;
 	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
 	OFFSET body_offset <comment="Offset of body">;
 

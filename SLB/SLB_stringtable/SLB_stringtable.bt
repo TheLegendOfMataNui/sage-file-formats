@@ -5,12 +5,13 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.1
+//   Version: 1.2
 //   Purpose: Parse SAGE SLB file: fluff_*.slb, lev*_*.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.2: Improved comments and structs.
 //       1.1: Updated the ID struct
 //       1.0: Initial release
 //------------------------------------------------
@@ -66,6 +67,11 @@ typedef union {
 } IDENTIFIER <bgcolor=cSilver, comment="Matches: ScIdentifier">;
 
 typedef struct {
+	IDENTIFIER id;
+	long number <bgcolor=cDkBlue>;
+} STRING_TABLE_ID <comment="A pair of values that identifies an entry">;
+
+typedef struct {
 	uchar length <bgcolor=cLtBlue, comment="String length, 0-255">;
 	if (length) {
 		char characters[length] <bgcolor=cLtGreen, comment="String data">;
@@ -84,8 +90,7 @@ typedef struct {
 } PSTRINGN_PTR <optimize=false, comment="Pointer to a pstringn">;
 
 typedef struct {
-	IDENTIFIER id <comment="Along with number, a unique pair">;
-	long number <bgcolor=cDkBlue, comment="Along with id, a unique pair">;
+	STRING_TABLE_ID id;
 	long count <bgcolor=cDkBlue, comment="Number of strings in the group">;
 	OFFSET offset <comment="Offset of pstringn pointers">;
 
