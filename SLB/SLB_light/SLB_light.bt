@@ -5,12 +5,13 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.0
+//   Version: 1.1
 //   Purpose: Parse SAGE SLB file: *_light.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.1: Improved names and comments
 //       1.0: Initial release
 //------------------------------------------------
 
@@ -79,9 +80,12 @@ typedef struct {
 
 typedef struct {
 	IDENTIFIER id <comment="Object ID">;
-	POINT3D position <comment="Position of the entry">;
-	float intensity <bgcolor=cAqua, comment="Intensity">;
-	float distance <bgcolor=cAqua, comment="Distance (point light only)">;
+	POINT3D position <comment="Position">;
+	float intensity <
+		bgcolor=cAqua,
+		comment="Intensity, multiplier to D3DLIGHT8.Diffuse and D3DLIGHT8.Specular"
+	>;
+	float range <bgcolor=cAqua, comment="Maps to D3DLIGHT8.Range (point light only)">;
 	RGBA color <comment="Color">;
 
 	// Flags:
