@@ -5,12 +5,13 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.1
+//   Version: 1.2
 //   Purpose: Parse SAGE SLB file: *_light.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.2: Expanded light type comments with DirectX struct info
 //       1.1: Improved names and comments
 //       1.0: Initial release
 //------------------------------------------------
@@ -91,8 +92,10 @@ typedef struct {
 	// Flags:
 
 	// Type:
-	// -------- -------- -------- -1------: Point light
-	// -------- -------- -------- 10------: Directional light
+	// -------- -------- -------- -1------: 1: Point (D3DLIGHT_POINT)
+	// -------- -------- -------- 10------: 3: Directional (D3DLIGHT_DIRECTIONAL)
+	// Unavailable types:
+	// 2: Spot (D3DLIGHT_SPOT)
 
 	// Behavior (directional uses 0, impacts point lights):
 	// -------- -------- -------- --000001: 0
