@@ -5,12 +5,13 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.1
+//   Version: 1.2
 //   Purpose: Parse SAGE SLB file: *_pos.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.2: Corrected id prefix types
 //       1.1: More id prefix types
 //       1.0: Initial release
 //------------------------------------------------
@@ -80,7 +81,7 @@ typedef struct {
 typedef struct {
 	// For pickups, the first 2 characters (after swapping) define which.
 	IDENTIFIER id <
-		comment="Object ID: te: Token, ph: Fruit, pe: Sphere, pa: Bubble, am: Ammo"
+		comment="Object ID: et: Token, ph: Fruit, pe: Sphere, pa: Bubble, am: Ammo"
 	>;
 
 	POINT3D position <comment="Position">;
