@@ -5,12 +5,13 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.0
+//   Version: 1.1
 //   Purpose: Parse SAGE SLB file: cin*_char.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.1: Updated structs
 //       1.0: Initial release
 //------------------------------------------------
 
@@ -71,36 +72,33 @@ typedef struct {
 } POINT3D <comment="Matches: ScPoint3d">;
 
 typedef struct {
-	float float_1 <bgcolor=cAqua, comment="Unknown, unused">;
+	float time <bgcolor=cAqua, comment="Time, unused">;
 	POINT3D position <comment="0.5 is added to y value">;
 	POINT3D orientation <comment="Only y is used">;
 } LOCATION;
 
 typedef struct {
-	LOCATION location_1 <bgcolor=cAqua, comment="Unknown, usused">;
-	LOCATION location_2 <bgcolor=cAqua, comment="Only used when anim_hierarchy is cnt1">;
-} LOCATIONS;
+	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
+	OFFSET body_offset <comment="Offset of table body">;
 
-typedef struct {
-	OFFSET offset <comment="Offset of locations data">;
-	local OFFSET tell = FTell();
-	FSeek(offset);
+	if (entry_count) {
+		local OFFSET tell = FTell();
+		FSeek(body_offset);
 
-	LOCATIONS locations <comment="Locations data">;
+		LOCATION entries[entry_count] <comment="Objects, must have 2 but only 2nd one is used">;
 
-	FSeek(tell);
-} LOCATIONS_PTR <optimize=false>;
+		FSeek(tell);
+	}
+} LOCATION_TABLE <optimize=false>;
 
 typedef struct {
 	IDENTIFIER anim_hierarchy <comment="If not cnt1, loads animation hierarchy (.bhd file)">;
 	IDENTIFIER character <comment="Character ID">;
 	IDENTIFIER anim_baked <comment="Baked animation (.bkd file)">;
 	float switch_mask_times[2] <bgcolor=cAqua, comment="Times to call GcCharacter::SwitchMask">;
-	long long_1 <bgcolor=cDkBlue, comment="Unknown, unused, always seen as 2">;
-	LOCATIONS_PTR locations <comment="Locations data, only used when anim_hierarchy is cnt1">;
+	LOCATION_TABLE location_table <comment="Only used when anim_hierarchy is cnt1">;
 } CHARACTER <
 	optimize=false,
-	format=binary,
 	comment="Character, matches _GcCinemaCharacterInfo"
 >;
 
