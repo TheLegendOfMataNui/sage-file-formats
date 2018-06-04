@@ -1,0 +1,207 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: SLB_emitter_all.bt
+//   Authors: JrMasterModelBuilder
+// Copyright: Copyright (c) 2018 JrMasterModelBuilder
+//   License: MPL-2.0
+//   Version: 1.0
+//   Purpose: Parse SAGE SLB file: emitter.all.slb
+//  Category: SAGE
+// File Mask: *.slb
+//  ID Bytes:
+//   History:
+//       1.0: Initial release
+//------------------------------------------------
+
+typedef ulong OFFSET <format=hex, bgcolor=cPurple>;
+
+local long FOOTER_MAGIC = 0xC0FFEE;
+
+typedef struct {
+	long entry_count <
+		bgcolor=cDkBlue,
+		comment="Number of entries before the footer"
+	>;
+	long magic <format=hex, bgcolor=cWhite, comment="Magic: 0xC0FFEE">;
+
+	if (entry_count) {
+		local OFFSET tell = FTell();
+		FSeek(FTell() - (8 + entry_count * 4));
+		OFFSET entries[entry_count] <comment="Offsets to make pointers">;
+		FSeek(tell);
+	}
+} FOOTER <
+	optimize=false,
+	comment="List of offsets to be made absolute pointers by the game engine"
+>;
+
+void read_footer() {
+	// Calculate the offset of footer magic (4-byte aligned).
+	local OFFSET footer_offset = FileSize();
+	footer_offset -= 4;
+	footer_offset >>= 2;
+	footer_offset *= 4;
+
+	// Check if footer present.
+	if (ReadInt(footer_offset) != FOOTER_MAGIC) {
+		return;
+	}
+	footer_offset -= 4;
+
+	// Remember position, go to footer, read the footer, restore position.
+	local OFFSET tell = FTell();
+	FSeek(footer_offset);
+	FOOTER footer;
+	FSeek(tell);
+}
+
+
+
+
+/*
+// Some structs used by the engine.
+struct StRGBABytes {
+	BYTE r;
+	BYTE g;
+	BYTE b;
+	BYTE a;
+};
+
+struct ScPoint3d {
+	float x;
+	float y;
+	float z;
+};
+
+struct GtParticle {
+	GtParticle *next;
+	ScPoint3d point; // Mapped to a D3DXVECTOR3 for D3DFVF_XYZ.
+	float size; // Mapped to a float for D3DFVF_PSIZE.
+	StRGBABytes rgba; // Mapped to a D3DCOLOR for D3DFVF_DIFFUSE.
+};
+*/
+
+typedef enum <long> {
+	// Offset in emitter data, cast to integer and multiplied by 4.
+	// The emitter data is function specific.
+	PARM_TYPE_EMITTER_DATA = 0,
+
+	// Offset in particle data, cast to integer and multiplied by 4.
+	// See GtParticle struct in somments above for particle data common to all particles.
+	// The remaining data is function specific.
+	// NOTE: The data pointed to starts after the next pointer.
+	// 0  -> point
+	// 3  -> size
+	// 4  -> rgba
+	// 5+ -> ????
+	PARM_TYPE_PARTICLE_DATA = 1,
+
+	// Float value passed directly.
+	PARM_TYPE_FLOAT = 2,
+
+	// Float is cast to intenger and passed directly.
+	PARM_TYPE_INT = 3
+} PARM_TYPE <bgcolor=cDkBlue, comment="Parameter type (see comments)">;
+
+typedef struct {
+	PARM_TYPE type <comment="Parameter type">;
+	float data <bgcolor=cAqua, comment="Data for parameter value">;
+} PARM <optimize=false, comment="Parameter, matches: GtEmitterClass::Parm">;
+
+typedef struct {
+	long length_reserved <bgcolor=cDkBlue, comment="Number of entries reserved">;
+	long length <bgcolor=cDkBlue, comment="Number of entries">;
+	OFFSET ptr <comment="Offset of table body">;
+
+	if (length) {
+		local OFFSET tell = FTell();
+		FSeek(ptr);
+
+		PARM entries[length] <comment="Function parameters">;
+
+		FSeek(tell);
+	}
+} PARM_VECTOR <
+	optimize=false,
+	comment="Func table, matches: vector<GtEmitterClass::Parm>"
+>;
+
+typedef struct {
+	long emitter_function <
+		bgcolor=cDkBlue,
+		comment="Emitter function from GcEmitterFunc::spFuncTable"
+	>;
+	PARM_VECTOR parm_vector <comment="Parameter data passed to the function">;
+} FUNC <optimize=false, comment="Function, matches: GtEmitterClass::Func">;
+
+typedef struct {
+	long length_reserved <bgcolor=cDkBlue, comment="Number of entries reserved">;
+	long length <bgcolor=cDkBlue, comment="Number of entries">;
+	OFFSET ptr <comment="Offset of table body">;
+
+	if (length) {
+		local OFFSET tell = FTell();
+		FSeek(ptr);
+
+		FUNC entries[length] <comment="Emitter functions">;
+
+		FSeek(tell);
+	}
+} FUNC_VECTOR <
+	optimize=false,
+	comment="Func vector, matches: vector<GtEmitterClass::Func>"
+>;
+
+typedef struct {
+	long id <bgcolor=cDkBlue, comment="ID (incremental)">;
+	long id_2 <bgcolor=cDkBlue, comment="Same is id">;
+
+	long emitter_data_size<
+		bgcolor=cDkBlue,
+		comment="Size of extra data for each emitter, this value x 4"
+	>;
+
+	// Should be at least 5, since sizeof(GtParticle) is 20.
+	long particle_size <
+		bgcolor=cDkBlue,
+		comment="Size of each particle, this value x 4"
+	>;
+
+	long max_particles <bgcolor=cDkBlue, comment="Maximum number of particles">;
+
+	// Unclear when each group is run.
+	FUNC_VECTOR group_1 <comment="Group 1">;
+	FUNC_VECTOR group_2 <comment="Group 2">;
+	FUNC_VECTOR group_3 <comment="Group 3">;
+	FUNC_VECTOR group_4 <comment="Group 4">;
+	FUNC_VECTOR group_5 <comment="Group 5">;
+	FUNC_VECTOR group_6 <comment="Group 6">;
+} EMITTER <optimize=false, comment="Emitter, matches: GtEmitterClass">;
+
+typedef struct {
+	long length_reserved <bgcolor=cDkBlue, comment="Number of entries reserved">;
+	long length <bgcolor=cDkBlue, comment="Number of entries">;
+	OFFSET ptr <comment="Offset of table body">;
+
+	if (length) {
+		local OFFSET tell = FTell();
+		FSeek(ptr);
+
+		EMITTER entries[length] <comment="Emitters">;
+
+		FSeek(tell);
+	}
+} EMITTER_VECTOR <
+	optimize=false,
+	comment="Emitter vector",
+	open=true
+>;
+
+
+
+
+LittleEndian();
+
+read_footer();
+EMITTER_VECTOR emitter_vector;
