@@ -11,6 +11,7 @@
 // File Mask: *.blk
 //  ID Bytes: 42 4C 4B 46 01 00 00 00
 //   History:
+//       1.0: Initial release
 //------------------------------------------------
 
 typedef char MAGIC[4];
