@@ -5,12 +5,13 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.1
+//   Version: 1.2
 //   Purpose: Parse SAGE SLB file: material.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.2: Fixed typo
 //       1.1: Updated comment, removed an unused struct
 //       1.0: Initial release
 //------------------------------------------------
@@ -92,7 +93,7 @@ typedef struct {
 	if (entry_count) {
 		MATERIAL entries[entry_count] <comment="Materials">;
 	}
-} METERIAL_TABLE <comment="Material table", open=true>;
+} MATERIAL_TABLE <comment="Material table", open=true>;
 
 
 
@@ -100,4 +101,4 @@ typedef struct {
 LittleEndian();
 
 read_footer();
-METERIAL_TABLE material_table;
+MATERIAL_TABLE material_table;
