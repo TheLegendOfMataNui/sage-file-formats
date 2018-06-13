@@ -1,0 +1,133 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: SAV.bt
+//   Authors: JrMasterModelBuilder
+// Copyright: Copyright (c) 2018 JrMasterModelBuilder
+//   License: MPL-2.0
+//   Version: 1.0
+//   Purpose: Parse SAGE SLB file: player*.sav
+//  Category: SAGE
+// File Mask: *.sav
+//  ID Bytes:
+//   History:
+//       1.0: Initial release
+//------------------------------------------------
+
+typedef union {
+	long i <format=hex>;
+	char c[4];
+} IDENTIFIER <bgcolor=cSilver, comment="Matches: ScIdentifier">;
+
+typedef enum <uchar> {
+	BOOL_UCHAR_FALSE = 0,
+	BOOL_UCHAR_TRUE = 1
+} BOOL_UCHAR <comment="Boolean uchar">;
+
+typedef struct {
+	uchar count <bgcolor=cLtBlue, comment="Count">;
+	if (count) {
+		IDENTIFIER entries[count];
+	}
+} IDENTIFIER_LIST <comment="ID list">;
+
+typedef struct {
+	IDENTIFIER id;
+	IDENTIFIER area;
+} IDENTIFIER_IN_AREA <comment="An ID in a specific area">;
+
+typedef struct {
+	uchar count <bgcolor=cLtBlue, comment="Count">;
+	if (count) {
+		IDENTIFIER_IN_AREA entries[count];
+	}
+} IDENTIFIER_IN_AREA_LIST <comment="ID in a specific area list">;
+
+typedef struct {
+	IDENTIFIER area <comment="Area ID">;
+	IDENTIFIER id <comment="Conversation ID">;
+	uchar number <bgcolor=cLtBlue, comment="Conversation number">;
+} CONVERSATION <comment="Conversation data">;
+
+typedef struct {
+	ushort count <bgcolor=cBlue, comment="Count">;
+	if (count) {
+		CONVERSATION entries[count];
+	}
+} CONVERSATION_LIST <comment="Conversation list">;
+
+typedef struct {
+	// Known flags:
+	// -------- -------- -1------ -------- = Quest 1 (used by the EXE)
+	// -------- -------1 -------- -------- = Quest 2 (used by the EXE)
+	// -------- -----1-- -------- -------- = Quest 3 (used by the EXE)
+	ulong conditions <
+		bgcolor=cDkBlue,
+		format=binary,
+		comment="Bit flags set by the OSI, see comments for some known flags"
+	>;
+	CONVERSATION_LIST list;
+} CONVERSATIONS <comment="Conversations data">;
+
+typedef struct {
+	IDENTIFIER area;
+	float time <bgcolor=cAqua>;
+} TIME <comment="Time list">;
+
+typedef struct {
+	uchar count <bgcolor=cLtBlue, comment="Count">;
+	if (count) {
+		TIME entries[count];
+	}
+} TIME_LIST <comment="Time list">;
+
+typedef struct {
+	uchar quest;
+} QUEST <comment="Quest">;
+
+typedef struct {
+	QUEST entries[6] <bgcolor=cLtBlue, comment="Quest">;
+} QUEST_LIST <comment="Quest list">;
+
+
+
+
+LittleEndian();
+
+char version <bgcolor=cLtBlue, comment="Alpha 0.006 = 5, Final 2001-10-23 = 6">;
+switch (version) {
+	case 5:
+	case 6: {
+		break;
+	}
+	default: {
+		Warning("Unknown version: %u", version);
+		return -1;
+	}
+}
+
+char level <bgcolor=cLtBlue, comment="Level number">;
+IDENTIFIER area <comment="Level area ID">;
+IDENTIFIER position <comment="Level area position ID">;
+IDENTIFIER look <comment="Look ID">;
+IDENTIFIER toa <comment="Toa ID">;
+ulong mask <bgcolor=cDkBlue, comment="Mask number">;
+uchar glyph <bgcolor=cLtBlue, comment="Glyph">;
+uchar health <bgcolor=cLtBlue, comment="Health">;
+uchar energy <bgcolor=cLtBlue, comment="Energy">;
+IDENTIFIER_IN_AREA_LIST token_list <comment="Token list">;
+IDENTIFIER_IN_AREA_LIST mask_list <comment="Mask list">;
+IDENTIFIER_IN_AREA_LIST glyph_list <comment="Glyph list">;
+IDENTIFIER_IN_AREA_LIST inventory_list <comment="Inventory list">;
+IDENTIFIER_LIST cinema_list <comment="Cinema list">;
+CONVERSATIONS conversations <comment="Conversations data">;
+TIME_LIST time_list <comment="Time list">;
+QUEST_LIST quest_list <comment="Quest list">;
+
+if (version == 6) {
+	uchar masks <bgcolor=cLtBlue, format=binary, comment="Mask bit flags">;
+	BOOL_UCHAR glyph_found <bgcolor=cLtBlue, comment="Glyph found">;
+	BOOL_UCHAR stone_found <bgcolor=cLtBlue, comment="Stone found">;
+	BOOL_UCHAR hook_found <bgcolor=cLtBlue, comment="Hook found">;
+	ushort ammo <bgcolor=cBlue, comment="Ammo amount">;
+}
