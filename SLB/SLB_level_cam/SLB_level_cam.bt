@@ -1,0 +1,109 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: SLB_level_cam.bt
+//   Authors: JrMasterModelBuilder
+// Copyright: Copyright (c) 2018 JrMasterModelBuilder
+//   License: MPL-2.0
+//   Version: 1.0
+//   Purpose: Parse SAGE SLB file: levels/**/*_cam.slb
+//  Category: SAGE
+// File Mask: *.slb
+//  ID Bytes:
+//   History:
+//       1.0: Initial release
+//------------------------------------------------
+
+typedef ulong OFFSET <format=hex, bgcolor=cPurple>;
+
+local long FOOTER_MAGIC = 0xC0FFEE;
+
+typedef struct {
+	long entry_count <
+		bgcolor=cDkBlue,
+		comment="Number of entries before the footer"
+	>;
+	long magic <format=hex, bgcolor=cWhite, comment="Magic: 0xC0FFEE">;
+
+	if (entry_count) {
+		local OFFSET tell = FTell();
+		FSeek(FTell() - (8 + entry_count * 4));
+		OFFSET entries[entry_count] <comment="Offsets to make pointers">;
+		FSeek(tell);
+	}
+} FOOTER <
+	optimize=false,
+	comment="List of offsets to be made absolute pointers by the game engine"
+>;
+
+void read_footer() {
+	// Calculate the offset of footer magic (4-byte aligned).
+	local OFFSET footer_offset = FileSize();
+	footer_offset -= 4;
+	footer_offset >>= 2;
+	footer_offset *= 4;
+
+	// Check if footer present.
+	if (ReadInt(footer_offset) != FOOTER_MAGIC) {
+		return;
+	}
+	footer_offset -= 4;
+
+	// Remember position, go to footer, read the footer, restore position.
+	local OFFSET tell = FTell();
+	FSeek(footer_offset);
+	FOOTER footer;
+	FSeek(tell);
+}
+
+
+
+
+typedef struct {
+	float time <bgcolor=cAqua, comment="Appears time related, always seen: 0">;
+	float value <bgcolor=cAqua, comment="Entry value">;
+} SPLINE_POINT;
+
+typedef struct {
+	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
+	OFFSET body_offset <comment="Offset of table body">;
+	OFFSET spline <comment="Reserved pointer space for the engine, always: 0">;
+
+	if (entry_count) {
+		local OFFSET tell = FTell();
+		FSeek(body_offset);
+
+		SPLINE_POINT entries[entry_count] <comment="Point entries">;
+
+		FSeek(tell);
+	}
+} SPLINE_PATH <
+	optimize=false,
+	comment="Spline path table"
+>;
+
+typedef struct {
+	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
+	OFFSET body_offset <comment="Offset of table body">;
+
+	if (entry_count) {
+		local OFFSET tell = FTell();
+		FSeek(body_offset);
+
+		SPLINE_PATH entries[entry_count];
+
+		FSeek(tell);
+	}
+} SPLINE_PATHS_TABLE <
+	optimize=false,
+	comment="Spline paths table",
+	open=true
+>;
+
+
+
+
+LittleEndian();
+
+read_footer();
+SPLINE_PATHS_TABLE spline_paths_table;
