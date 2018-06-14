@@ -1,0 +1,46 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: CDX_spheres.bt
+//   Authors: JrMasterModelBuilder
+// Copyright: Copyright (c) 2018 JrMasterModelBuilder
+//   License: MPL-2.0
+//   Version: 1.0
+//   Purpose: Parse SAGE SLB file: spheres.cdx
+//  Category: SAGEs
+// File Mask: sphere.slb
+//  ID Bytes:
+//   History:
+//       1.0: Initial release
+//------------------------------------------------
+
+typedef union {
+	long i <format=hex>;
+	char c[4];
+} IDENTIFIER <bgcolor=cSilver, comment="Matches: ScIdentifier">;
+
+typedef struct {
+	float x <bgcolor=cAqua>;
+	float y <bgcolor=cAqua>;
+	float z <bgcolor=cAqua>;
+} POINT3D <comment="Matches: ScPoint3d">;
+
+typedef struct {
+	float size <bgcolor=cAqua, comment="Size (assumed)">;
+	IDENTIFIER id <comment="ID">;
+	POINT3D position <comment="Position">;
+} SPHERE <comment="Sphere">;
+
+typedef struct {
+	long count <bgcolor=cDkBlue, comment="Entry count">;
+	if (count) {
+		SPHERE entries[count];
+	}
+} SPHERE_LIST <comment="Sphere list", open=true>;
+
+
+
+
+BigEndian();
+
+SPHERE_LIST sphere_list;
