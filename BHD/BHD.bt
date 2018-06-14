@@ -1,0 +1,49 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: BHD.bt
+//   Authors: JrMasterModelBuilder
+// Copyright: Copyright (c) 2018 JrMasterModelBuilder
+//   License: MPL-2.0
+//   Version: 1.0
+//   Purpose: Parse SAGE SLB file: *.bhd
+//  Category: SAGEs
+// File Mask: *.bhd
+//  ID Bytes:
+//   History:
+//       1.0: Initial release
+//------------------------------------------------
+
+typedef struct {
+	float _11 <bgcolor=cAqua>;
+	float _12 <bgcolor=cAqua>;
+	float _13 <bgcolor=cAqua>;
+	// _14 = 0.0
+	float _21 <bgcolor=cAqua>;
+	float _22 <bgcolor=cAqua>;
+	float _23 <bgcolor=cAqua>;
+	// _24 = 0.0
+	float _31 <bgcolor=cAqua>;
+	float _32 <bgcolor=cAqua>;
+	float _33 <bgcolor=cAqua>;
+	// _34 = 0.0
+	float _41 <bgcolor=cAqua>;
+	float _42 <bgcolor=cAqua>;
+	float _43 <bgcolor=cAqua>;
+	// _44 = 1.0
+} MATRIX_4X3 <comment="Mapped to ScFastMatrix/_D3DMATRIX with constants">;
+
+
+
+
+LittleEndian();
+
+long count <
+	bgcolor=cDkBlue,
+	comment="Entry count"
+>;
+long parents[count] <
+	bgcolor=cDkBlue,
+	comment="Parent, root same as index, -1 invalid"
+>;
+MATRIX_4X3 matrixes[count];
