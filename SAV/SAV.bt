@@ -6,7 +6,7 @@
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
 //   Version: 1.0
-//   Purpose: Parse SAGE SLB file: player*.sav
+//   Purpose: Parse SAGE file: player*.sav
 //  Category: SAGE
 // File Mask: *.sav
 //  ID Bytes:
