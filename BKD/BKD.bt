@@ -1,0 +1,113 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: BKD.bt
+//   Authors: JrMasterModelBuilder
+// Copyright: Copyright (c) 2018 JrMasterModelBuilder
+//   License: MPL-2.0
+//   Version: 1.0
+//   Purpose: Parse SAGE file: *.bkd
+//  Category: SAGEs
+// File Mask: *.bkd
+//  ID Bytes:
+//   History:
+//       1.0: Initial release
+//------------------------------------------------
+
+typedef ulong OFFSET <format=hex, bgcolor=cPurple>;
+
+typedef struct {
+	short short_1 <
+		bgcolor=cBlue,
+		comment="Unknown, cast to float"
+	>;
+	short short_2 <
+		bgcolor=cBlue,
+		comment="Unknown, cast to float, multiplied by 0.000030517578"
+	>;
+	short short_3 <
+		bgcolor=cBlue,
+		comment="Unknown, cast to float, multiplied by 0.000030517578"
+	>;
+	short short_4 <
+		bgcolor=cBlue,
+		comment="Unknown, cast to float, multiplied by 0.000030517578"
+	>;
+	short short_5 <
+		bgcolor=cBlue,
+		comment="Unknown, cast to float, multiplied by 0.000030517578"
+	>;
+} TCB_QUAT_INTERPOLATOR_DATA <
+	comment="TCB Quat Interpolator Data"
+>;
+
+typedef struct {
+	long long_1 <bgcolor=cDkBlue, comment="Unknown, cast to float">;
+	float float_1 <bgcolor=cAqua, comment="Unknown">;
+	float float_2 <bgcolor=cAqua, comment="Unknown">;
+	float float_3 <bgcolor=cAqua, comment="Unknown">;
+} TCB_INTERPOLATOR_DATA <
+	comment="TCB Interpolator Data"
+>;
+
+typedef struct {
+	local OFFSET tell;
+
+	short id <bgcolor=cBlue, comment="An ID">;
+
+	// Typical alignment bytes: `00 80`
+	short tcb_quat_data_count <
+		bgcolor=cBlue,
+		comment="TCB quat count (odd number may mean 2 bytes of alignment after entries)"
+	>;
+	short tcb_data_count_1 <
+		bgcolor=cBlue,
+		comment="TCB 1 count"
+	>;
+	short tcb_data_count_2 <
+		bgcolor=cBlue,
+		comment="TCB 2 count"
+	>;
+
+	OFFSET tcb_quat_data_offset <comment="TCB quat offset">;
+	if (tcb_quat_data_count) {
+		tell = FTell();
+		FSeek(tcb_quat_data_offset);
+		TCB_QUAT_INTERPOLATOR_DATA tcb_quat_data[tcb_quat_data_count];
+		FSeek(tell);
+	}
+
+	OFFSET tcb_data_1_offset <comment="TCB 1 offset">;
+	if (tcb_data_count_1) {
+		tell = FTell();
+		FSeek(tcb_data_1_offset);
+		TCB_INTERPOLATOR_DATA tcb_data_1[tcb_data_count_1];
+		FSeek(tell);
+	}
+
+	OFFSET tcb_data_2_offset <comment="TCB 1 offset">;
+	if (tcb_data_count_2) {
+		tell = FTell();
+		FSeek(tcb_data_2_offset);
+		TCB_INTERPOLATOR_DATA tcb_data_2[tcb_data_count_2];
+		FSeek(tell);
+	}
+} ENTRY <
+	optimize=false,
+	comment="Entry"
+>;
+
+
+
+
+LittleEndian();
+
+short length <
+	bgcolor=cBlue,
+	comment="Length, time related (multiplied by 0.016666668)"
+>;
+short count <
+	bgcolor=cBlue,
+	comment="Entry count"
+>;
+ENTRY entries[count];
