@@ -11,6 +11,7 @@
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.1: Fixed a typo in a comment
 //       1.0: Initial release
 //------------------------------------------------
 
@@ -88,7 +89,7 @@ typedef enum <long> {
 	PARM_TYPE_EMITTER_DATA = 0,
 
 	// Offset in particle data, cast to integer and multiplied by 4.
-	// See GtParticle struct in somments above for particle data common to all particles.
+	// See GtParticle struct in comments above for particle data common to all particles.
 	// The remaining data is function specific.
 	// NOTE: The data pointed to starts after the next pointer.
 	// 0  -> point
