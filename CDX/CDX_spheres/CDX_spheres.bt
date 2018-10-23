@@ -8,9 +8,10 @@
 //   Version: 1.0
 //   Purpose: Parse SAGE file: spheres.cdx
 //  Category: SAGEs
-// File Mask: sphere.slb
+// File Mask: spheres.cdx
 //  ID Bytes:
 //   History:
+//       1.1: Updated names, fixed the file mask
 //       1.0: Initial release
 //------------------------------------------------
 
@@ -27,7 +28,7 @@ typedef struct {
 
 typedef struct {
 	float size <bgcolor=cAqua, comment="Size (assumed)">;
-	IDENTIFIER id <comment="ID">;
+	IDENTIFIER bone <comment="Bone ID">;
 	POINT3D position <comment="Position">;
 } SPHERE <comment="Sphere">;
 
