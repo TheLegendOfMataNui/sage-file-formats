@@ -5,12 +5,13 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.2
+//   Version: 1.3
 //   Purpose: Parse SAGE SLB file: *level_conv.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.3: Better types and comments.
 //       1.2: Better name.
 //       1.1: Improved comments and structs.
 //       1.0: Initial release
@@ -94,12 +95,24 @@ typedef struct {
 	PSTRINGN str <comment="String">;
 
 	FSeek(tell);
-} FRAME <optimize=false, comment="Frame">;
+} FRAME <optimize=false, comment="Frame (Mapped to: GtConvFrame)">;
 
 typedef struct {
 	long long_1 <bgcolor=cDkBlue>;
-	long long_2 <bgcolor=cDkBlue>;
-	long long_3 <bgcolor=cDkBlue>;
+
+	// Something special about 0x80000000.
+	long flags_cond <
+		bgcolor=cDkBlue,
+		format=binary,
+		comment="Save flags condition"
+	>;
+
+	long flags_set <
+		bgcolor=cDkBlue,
+		format=binary,
+		comment="Save flags set"
+	>;
+
 	STRING_TABLE_ID id;
 	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
 	OFFSET body_offset <comment="Offset of body">;
@@ -108,11 +121,11 @@ typedef struct {
 		local OFFSET tell = FTell();
 		FSeek(body_offset);
 
-		FRAME entries[entry_count] <comment="Frames">;
+		FRAME entries[entry_count];
 
 		FSeek(tell);
 	}
-} INFO <optimize=false, comment="Info">;
+} INFO <optimize=false, comment="Info (Mapped to: GtConvInfo)">;
 
 typedef struct {
 	IDENTIFIER id_1;
@@ -125,11 +138,11 @@ typedef struct {
 		local OFFSET tell = FTell();
 		FSeek(body_offset);
 
-		INFO entries[entry_count] <comment="Infos">;
+		INFO entries[entry_count];
 
 		FSeek(tell);
 	}
-} CHARACTER <optimize=false, comment="Character">;
+} CHARACTER <optimize=false, comment="Character (Mapped to: GtConvChar)">;
 
 typedef struct {
 	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
@@ -139,7 +152,7 @@ typedef struct {
 		local OFFSET tell = FTell();
 		FSeek(body_offset);
 
-		CHARACTER entries[entry_count] <comment="Character">;
+		CHARACTER entries[entry_count];
 
 		FSeek(tell);
 	}
