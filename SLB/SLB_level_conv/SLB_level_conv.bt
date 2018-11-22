@@ -5,12 +5,13 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.4
-//   Purpose: Parse SAGE SLB file: *level_conv.slb
+//   Version: 1.5
+//   Purpose: Parse SAGE SLB file: levels/**/*_conv.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.5: Typo fixes.
 //       1.4: Better names and info from SLK writing code.
 //       1.3: Better types and comments.
 //       1.2: Better name.
@@ -119,7 +120,7 @@ typedef struct {
 	FSeek(body_offset);
 
 	// Appears to be in 2-char sequences, possible limited to 4.
-	PSTRINGN str <comment="Conversation sound (SLK: CONV_SOUND)">;
+	PSTRINGN conv_sounds <comment="Conversation sound (SLK: CONV_SOUND)">;
 
 	FSeek(tell);
 } FRAME <
