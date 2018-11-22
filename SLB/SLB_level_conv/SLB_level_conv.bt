@@ -5,12 +5,13 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.3
+//   Version: 1.4
 //   Purpose: Parse SAGE SLB file: *level_conv.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.4: Better names and info from SLK writing code.
 //       1.3: Better types and comments.
 //       1.2: Better name.
 //       1.1: Improved comments and structs.
@@ -75,45 +76,80 @@ typedef struct {
 	char nul <bgcolor=cLtYellow, comment="Null terminator">;
 } PSTRINGN <optimize=false, comment="Pascal string, null terminated">;
 
-typedef struct {
-	IDENTIFIER id;
-	long number <bgcolor=cDkBlue>;
-} STRING_TABLE_ID <comment="A pair of values that identifies an entry">;
+enum LINE_SIDE {
+	LINE_SIDE_RIGHT = 1, // SLK: "kConvRight"
+	LINE_SIDE_LEFT = 2   // SLK: "kConvLeft"
+	// Other values SLK: ""
+};
 
 
 typedef struct {
-	long long_1 <bgcolor=cDkBlue>;
-	long long_2 <bgcolor=cDkBlue>;
-	long long_3 <bgcolor=cDkBlue>;
-	long long_4 <bgcolor=cDkBlue>;
-	long string_index <bgcolor=cDkBlue, comment="Index in strings table string list">;
+	long toa_anim <bgcolor=cDkBlue, comment="Toa animation (SLK: CONV_TOA_ANIM)">;
+	long char_anim <bgcolor=cDkBlue, comment="Character animation (SLK: CONV_CHAR_ANIM)">;
+
+	// Contains 2 pieces of information:
+	// 1. Character:
+	//   -------- -------- -------- -1------ = kConvToa
+	//   -------- -------- -------- 1------- = kConvChar
+	//   -------- -------- -------1 -------- = kConvBoth
+	//   <default>                           = kConvNone
+	// 2. Side:
+	//   -------- -------- -------- -----1-- = kConvSide
+	//   -------- -------- -------- ----1--- = kConvHead
+	//   -------- -------- -------- ---1---- = kConvShldr
+	//   -------- -------- -------- --1----- = kConvTop
+	//   <default>                           = kConvNone
+	long cam_pos_targ <
+		bgcolor=cDkBlue,
+		format=binary,
+		comment="Camera position and target, see comments (SLK: CONV_CAM_POS_TARG)"
+	>;
+
+	long cam_dist <
+		bgcolor=cDkBlue,
+		comment="Camera distance (SLK: CONV_CAM_DIST)"
+	>;
+	long string_index <
+		bgcolor=cDkBlue,
+		comment="Index in strings table string list (SLK: CONV_STR_OFFSET)"
+	>;
+
 	OFFSET body_offset <comment="Offset of body">;
-
 	local OFFSET tell = FTell();
 	FSeek(body_offset);
 
-	PSTRINGN str <comment="String">;
+	// Appears to be in 2-char sequences, possible limited to 4.
+	PSTRINGN str <comment="Conversation sound (SLK: CONV_SOUND)">;
 
 	FSeek(tell);
-} FRAME <optimize=false, comment="Frame (Mapped to: GtConvFrame)">;
+} FRAME <
+	optimize=false,
+	comment="Frame (Mapped to: GtConvFrame) (SLK: CONV_FRAME_DATA)"
+>;
 
 typedef struct {
-	long long_1 <bgcolor=cDkBlue>;
+	LINE_SIDE line_sid <
+		bgcolor=cDkBlue,
+		comment="(SLK: 1 = kConvRight, 2 = kConvLeft, others empty)"
+	>;
 
 	// Something special about 0x80000000.
-	long flags_cond <
+	long cond_start <
 		bgcolor=cDkBlue,
 		format=binary,
-		comment="Save flags condition"
+		comment="Save flags condition (SLK: CONV_COND_START)"
 	>;
 
-	long flags_set <
+	long cond_end <
 		bgcolor=cDkBlue,
 		format=binary,
-		comment="Save flags set"
+		comment="Save flags set (SLK: CONV_COND_END)"
 	>;
 
-	STRING_TABLE_ID id;
+	// A pair of values that identifies an entry.
+	IDENTIFIER str_label <comment="(SLK: CONV_STR_LABEL)">;
+	long str_idx <bgcolor=cDkBlue, comment="(SLK: CONV_STR_IDX)">;
+
 	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
 	OFFSET body_offset <comment="Offset of body">;
 
@@ -125,13 +161,16 @@ typedef struct {
 
 		FSeek(tell);
 	}
-} INFO <optimize=false, comment="Info (Mapped to: GtConvInfo)">;
+} INFO <
+	optimize=false,
+	comment="Info (Mapped to: GtConvInfo) (SLK: CONV_DATA)"
+>;
 
 typedef struct {
-	IDENTIFIER id_1;
-	IDENTIFIER id_2;
-	IDENTIFIER id_3;
-	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
+	IDENTIFIER toa_name <comment="(SLK: CONV_TOA_NAME)">;
+	IDENTIFIER char_name <comment="(SLK: CONV_CHAR_NAME)">;
+	IDENTIFIER chat_cont <comment="(SLK: CONV_CHAR_CONT)">;
+ 	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
 	OFFSET body_offset <comment="Offset of body">;
 
 	if (entry_count) {
@@ -142,7 +181,10 @@ typedef struct {
 
 		FSeek(tell);
 	}
-} CHARACTER <optimize=false, comment="Character (Mapped to: GtConvChar)">;
+} CHARACTER <
+	optimize=false,
+	comment="Character (Mapped to: GtConvChar) (SLK: CONV_CHAR_DATA)"
+>;
 
 typedef struct {
 	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
