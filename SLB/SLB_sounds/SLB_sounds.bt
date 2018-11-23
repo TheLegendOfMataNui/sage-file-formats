@@ -5,12 +5,13 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.0
+//   Version: 1.1
 //   Purpose: Parse SAGE SLB file: *_sounds.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.1: Updated with SLK info.
 //       1.0: Initial release
 //------------------------------------------------
 
@@ -96,20 +97,24 @@ typedef struct {
 
 
 typedef struct {
-	PSTRINGN_PTR path <comment="File path">;
-	IDENTIFIER id;
-	long variety <bgcolor=cDkBlue, comment="Sound variety, 8-bit limit">;
-	ulong voice_priority <bgcolor=cDkBlue, comment="Sound priority">;
-	float drift_to_volume <bgcolor=cAqua, comment="Volume to drift to">;
-	long frequency <bgcolor=cDkBlue, comment="Audio frequency">;
-	POINT3D position;
-	VECTOR3D orientation;
-	long cone_angle_1 <bgcolor=cDkBlue, comment="Cone angle 1">;
-	long cone_angle_2 <bgcolor=cDkBlue, comment="Cone angle 2">;
-	float outside_volume <bgcolor=cAqua, comment="Outside volume">;
-	float distance_min <bgcolor=cAqua, comment="Distance min">;
-	float distance_max <bgcolor=cAqua, comment="Distance max">;
-} SOUND <optimize=false, comment="Sound">;
+	PSTRINGN_PTR filename <comment="File path (SLK: SOUND3D_FILENAME)">;
+	IDENTIFIER identifier <comment="Sound identifier (SLK: SOUND3D_IDENTIFIER)">;
+	long variety <bgcolor=cDkBlue, comment="Sound variety, 8-bit limit (SLK: SOUND3D_VARIETY)">;
+	ulong priority <bgcolor=cDkBlue, comment="Sound priority (SLK: SOUND3D_PRIORITY)">;
+	float volume <bgcolor=cAqua, comment="Sound volume (SLK: SOUND3D_VOLUME)">;
+	long pitch <bgcolor=cDkBlue, comment="Sound pitch (SLK: SOUND3D_PITCH)">;
+	POINT3D position <
+		comment="Matches: ScVector (SLK: SOUND3D_POSITIONX, SOUND3D_POSITIONY, SOUND3D_POSITIONZ)"
+	>;
+	VECTOR3D front <
+		comment="Matches: ScVector (SLK: SOUND3D_FRONTX, SOUND3D_FRONTY, SOUND3D_FRONTZ)"
+	>;
+	long insideangle <bgcolor=cDkBlue, comment="Cone angle inside (SLK: SOUND3D_INSIDEANGLE)">;
+	long outsideangle <bgcolor=cDkBlue, comment="Cone angle outside (SLK: SOUND3D_OUTSIDEANGLE)">;
+	float outsidevolume <bgcolor=cAqua, comment="Outside volume (SLK: SOUND3D_OUTSIDEVOLUME)">;
+	float mindistance <bgcolor=cAqua, comment="Distance min (SLK: SOUND3D_MINDISTANCE)">;
+	float maxdistance <bgcolor=cAqua, comment="Distance max (SLK: SOUND3D_MAXDISTANCE)">;
+} SOUND <optimize=false, comment="Sound (SLK: SOUND3D_DATA)">;
 
 typedef struct {
 	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
