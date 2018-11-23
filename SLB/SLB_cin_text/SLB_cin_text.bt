@@ -5,12 +5,13 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.0
+//   Version: 1.1
 //   Purpose: Parse SAGE SLB file: cin*_text.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.1: Updated with SLK info.
 //       1.0: Initial release
 //------------------------------------------------
 
@@ -65,16 +66,11 @@ typedef union {
 } IDENTIFIER <bgcolor=cSilver, comment="Matches: ScIdentifier">;
 
 typedef struct {
-	IDENTIFIER id;
-	long number <bgcolor=cDkBlue>;
-} STRING_TABLE_ID <comment="A pair of values that identifies an entry">;
-
-typedef struct {
-	float time <bgcolor=cAqua, comment="Frame time">;
-	long index <bgcolor=cDkBlue, comment="Entry index">;
-} STRING <
+	float time <bgcolor=cAqua, comment="Frame time (SLK: TEXT_TIME)">;
+	long str_offset <bgcolor=cDkBlue, comment="Entry index (SLK: TEXT_STR_OFFSET)">;
+} DATA <
 	optimize=false,
-	comment="Text"
+	comment="Text data (SLK: TEXT_DATA)"
 >;
 
 typedef struct {
@@ -85,7 +81,7 @@ typedef struct {
 		local OFFSET tell = FTell();
 		FSeek(body_offset);
 
-		STRING entries[entry_count] <comment="Sounds, must have 1, only 1 ever used">;
+		DATA entries[entry_count];
 
 		FSeek(tell);
 	}
@@ -101,5 +97,9 @@ typedef struct {
 LittleEndian();
 
 read_footer();
-STRING_TABLE_ID id;
+
+// A pair of values that identifies an entry.
+IDENTIFIER str_label <comment="(SLK: TEXT_STR_LABEL)">;
+long str_idx <bgcolor=cDkBlue, comment="(SLK: TEXT_STR_IDX)">;
+
 STRING_TABLE string_table;
