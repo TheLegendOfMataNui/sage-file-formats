@@ -5,12 +5,13 @@
 //   Authors: JrMasterModelBuilder
 // Copyright: Copyright (c) 2018 JrMasterModelBuilder
 //   License: MPL-2.0
-//   Version: 1.5
+//   Version: 1.6
 //   Purpose: Parse SAGE SLB file: levels/**/*_conv.slb
 //  Category: SAGE
 // File Mask: *.slb
 //  ID Bytes:
 //   History:
+//       1.5: Typo fix name char not chat.
 //       1.5: Typo fixes.
 //       1.4: Better names and info from SLK writing code.
 //       1.3: Better types and comments.
@@ -170,7 +171,7 @@ typedef struct {
 typedef struct {
 	IDENTIFIER toa_name <comment="(SLK: CONV_TOA_NAME)">;
 	IDENTIFIER char_name <comment="(SLK: CONV_CHAR_NAME)">;
-	IDENTIFIER chat_cont <comment="(SLK: CONV_CHAR_CONT)">;
+	IDENTIFIER char_cont <comment="(SLK: CONV_CHAR_CONT)">;
  	long entry_count <bgcolor=cDkBlue, comment="Number of entries">;
 	OFFSET body_offset <comment="Offset of body">;
 
