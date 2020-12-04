@@ -1,0 +1,109 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: COL.bt
+//   Authors: JrMasterModelBuilder
+// Copyright: Copyright (c) 2020 JrMasterModelBuilder
+//   License: MPL-2.0
+//   Version: 1.0
+//   Purpose: Parse SAGE Collective files.
+//  Category: SAGE
+// File Mask: *.col
+//  ID Bytes: 00 00 00 02
+//   History:
+//       1.0: Initial release
+//------------------------------------------------
+
+
+typedef ulong OFFSET <format=hex, bgcolor=cPurple>;
+
+// & 1 = valid entry
+// & 0xF0 = compression format
+//   0000---- = none
+//   0001---- = LZZ
+//   0010---- = RLE
+typedef ulong ENTRY_FLAGS <
+	format=binary,
+	bgcolor=cDkBlue,
+    comment="Bit flags"
+>;
+
+typedef struct {
+    ulong version <bgcolor=cDkBlue, comment="Format version? Always 2">;
+    ulong count <bgcolor=cDkBlue, comment="Entry count">;
+	long flags <
+		format=binary,
+		bgcolor=cDkBlue,
+        comment="Bit flags (entry format)"
+	>;
+    OFFSET end <comment="Total size (file end)">;
+    char unknown[20] <
+        bgcolor=cRed,
+        comment="Unknown, always filled 0xFF"
+    >;
+} HEADER <comment="File header">;
+
+typedef struct {
+	ENTRY_FLAGS flags;
+	char name[20] <
+		bgcolor=cGreen,
+		comment="File name"
+	>;
+    OFFSET offset <comment="Data offset">;
+    ulong size_compressed <bgcolor=cDkBlue, comment="Data size">;
+    ulong size_decompressed <bgcolor=cDkBlue, comment="Decompressed size">;
+
+    if (size) {
+    	local ulong tell = FTell();
+    	FSeek(offset);
+        char body[size] <bgcolor=cSilver, comment="Entry data">;
+    	FSeek(tell);
+    }
+} ENTRY_NAME <comment="ScNameEntries entry">;
+
+typedef struct {
+    ulong hash <format=hex, bgcolor=cDkBlue, comment="Name hash (SrHashString / BKDR)">;
+	ENTRY_FLAGS flags;
+    OFFSET offset <comment="Data offset">;
+    ulong size_decompressed <bgcolor=cDkBlue, comment="Decompressed size">;
+
+    // Find offset of the next entry if there is one, else use file end.
+	local ulong tell = FTell();
+    local OFFSET next_offset = tell < (sizeof(header) + header.count * 16) ?
+        ReadUInt(tell + 8) :
+        header.end;
+    local OFFSET size = next_offset - offset;
+
+    if (size) {
+    	FSeek(offset);
+        char body[size] <bgcolor=cSilver, comment="Entry data">;
+    	FSeek(tell);
+    }
+} ENTRY_HASH <optimize=false, comment="ScHashEntries entry">;
+
+
+
+
+BigEndian();
+
+HEADER header;
+
+if (header.version != 2) {
+	Warning("Unknown header version: %u", header.version);
+	return -1;
+}
+
+local uint flags = header.flags & 0xFFFFFFFE;
+if (flags & 0xE) {
+    if ((flags & 0xE) == 4) {
+        // Must be sorted by their hash.
+        ENTRY_HASH entries[header.count];
+    }
+    else {
+        Warning("Unknown format");
+		return -1;
+    }
+}
+else {
+    ENTRY_NAME entries[header.count];
+}
