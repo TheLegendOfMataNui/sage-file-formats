@@ -1,0 +1,103 @@
+//------------------------------------------------
+//--- 010 Editor v8.0.1 Binary Template
+//
+//      File: COL.DB.bt
+//   Authors: JrMasterModelBuilder
+// Copyright: Copyright (c) 2022 JrMasterModelBuilder
+//   License: MPL-2.0
+//   Version: 1.0
+//   Purpose: Parse SAGE Collective DB files.
+//  Category: SAGE
+// File Mask: *.col.db
+//  ID Bytes: 00 00 00 02
+//   History:
+//       1.0: Initial release
+//------------------------------------------------
+
+
+typedef ulong OFFSET <format=hex, bgcolor=cPurple>;
+
+typedef struct {
+	uchar length <bgcolor=cLtBlue, comment="String length, 0-255">;
+	if (length) {
+		char characters[length] <bgcolor=cLtGreen, comment="String data">;
+	}
+} PSTRING<optimize=false, comment="Pascal string, non-null terminated">;
+
+ulong SrHashString(string s) {
+	local ulong r = 0;
+	local uchar i;
+	for (i = 0; s[i]; i++) {
+		r = s[i] + 131 * r;
+	}	return r;}
+
+string pstringToString(PSTRING &pstr) {
+	local string r = "";	local uchar i;
+	for (i = 0; i < pstr.length; i++) {
+		SPrintf(r, "%s%c", r, pstr.characters[i]);
+	}
+	return r;
+}
+
+string basename(string path) {
+	local string r = "";	local uchar i;
+	for (i = 0; path[i]; i++) {
+		if (path[i] == '/' || path[i] == '\\') {
+			r = "";
+			continue;
+		}
+		SPrintf(r, "%s%c", r, path[i]);
+	}
+	return r;
+}
+
+typedef struct {
+	ulong version <bgcolor=cDkBlue, comment="Format version? Always 2">;
+	ulong count <bgcolor=cDkBlue, comment="Entry count">;
+	long flags <
+		format=binary,
+		bgcolor=cDkBlue,
+		comment="Bit flags? (Always 0x00000006)"
+	>;
+	OFFSET end <comment="Total size? (Always 0x00000000)">;
+	char unknown[20] <
+		bgcolor=cRed,
+		comment="Unknown, always filled 0xFF"
+	>;
+} HEADER <comment="File header">;
+
+string pathComment(PSTRING &path) {
+	local string r = "";
+	local string p = pstringToString(path);
+	local string n = basename(p);
+	SPrintf(r, "Entry: %s (%s = 0x%08X)", p, n, SrHashString(n));
+	return r;
+}
+
+typedef struct {
+	ulong unknown_1 <format=hex, bgcolor=cDkBlue, comment="Unknown 1">;
+	ulong unknown_2 <format=hex, bgcolor=cDkBlue, comment="Unknown 2">;
+	PSTRING path <comment=pathComment>;
+
+//	Printf(
+//		"0x%08X 0x%08X 0x%08X %s\n",
+//		unknown_1,
+//		unknown_2,
+//		SrHashString(basename(pstringToString(path))),
+//		basename(pstringToString(path))
+//	);
+} ENTRY <optimize=false, comment="DB entry">;
+
+
+
+
+BigEndian();
+
+HEADER header;
+
+if (header.version != 2) {
+	Warning("Unknown header version: %u", header.version);
+	return -1;
+}
+
+ENTRY entries[header.count];
